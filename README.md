@@ -112,15 +112,19 @@ The action deletes a card when its repository leaves the config. It only touches
 
 ## Star history
 
-List the repositories in `starHistory.repos` to draw their star history, independently of card highlighting. Names use `owner` by default; `owner/repo` also works. Repositories do not need a card. The graph follows the list order and shows up to six repositories meeting `minStars` (default: 0).
+List the repositories in `starHistory.repos` to draw their star history, independently of card highlighting. Names use `owner` by default; `owner/repo` also works. Repositories do not need a card. The graph follows the list order and shows up to six repositories.
 
 ```yaml
 starHistory:
   repos: [gup, sqly]
-  minStars: 100
+  total: true
 sections:
   ...
 ```
+
+Set `starHistory.total: true` to add a `total` line showing the combined star history of the repositories in `starHistory.repos`. It is disabled by default. With `total` enabled, the graph shows the total and up to five individual repositories; the total includes selected repositories beyond that display limit. It does not automatically include other repositories owned by the account. This uses the same fetched history and needs no extra API requests or token permissions.
+
+The `minStars` option has been removed. Remove it from existing configurations; every explicitly listed repository is now included.
 
 When upgrading from v0.1.0, add `starHistory.repos` explicitly. The graph no longer selects repositories through `featured`.
 
@@ -174,7 +178,7 @@ Each run makes one GraphQL request for repository metadata and paginated REST re
 | --- | --- | --- |
 | `owner` | owner of the repository running the workflow | Owner for names written without `owner/`. |
 | `starHistory.repos` | required with `starHistory` | Repository names in graph order, independent of cards and `featured`. |
-| `starHistory.minStars` | `0` | Minimum star count for a selected repository to appear. |
+| `starHistory.total` | `false` | Add a `total` line for all selected repositories, including those beyond the individual-line display limit. |
 | `sections[].summary` | none | Folds the section into `<details>` with this summary. |
 | `sections[].groups[].title` | required | Heading above the cards. |
 | `repos[].name` | required | `repo` or `owner/repo`. |

@@ -161,7 +161,7 @@ scenarios:
             path: .github/showcase/light/logo.svg
             equals: "<svg/>"
 
-  - name: the star history graph draws explicitly selected repositories over minStars
+  - name: the star history graph draws explicitly selected repositories and their total
     mock_servers:
       - *github
     env: *env
@@ -173,7 +173,7 @@ scenarios:
             owner: me
             starHistory:
               repos: [tool]
-              minStars: 2
+              total: true
             sections:
               - groups:
                   - title: Mine
@@ -188,7 +188,7 @@ scenarios:
       - assert:
           file:
             path: cards/star-history-light.svg
-            contains: "Star history: tool 3"
+            contains: "Star history: total 3, tool 3"
       - assert:
           file:
             path: README.md
@@ -228,7 +228,6 @@ scenarios:
             owner: me
             starHistory:
               repos: [tool]
-              minStars: 0
             sections:
               - groups:
                   - title: Mine

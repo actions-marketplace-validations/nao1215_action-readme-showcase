@@ -94,9 +94,14 @@ func run(args []string, stdout, stderr io.Writer) error {
 		if err != nil {
 			return err
 		}
-		if len(series) > maxStarSeries {
-			fmt.Fprintf(stderr, "readme-showcase: warning: the star history shows only the first %d of %d repositories\n", maxStarSeries, len(series))
+		limit := maxStarSeries
+		if cfg.StarHistory.Total {
+			limit--
 		}
+		if len(series) > limit {
+			fmt.Fprintf(stderr, "readme-showcase: warning: the star history shows only the first %d of %d repositories\n", limit, len(series))
+		}
+		series = graphSeries(series, cfg.StarHistory.Total)
 		now := time.Now().UTC()
 		for _, t := range themes {
 			if err := w.write(filepath.Join(outDir, starGraphFile(t.Name)), []byte(renderStarGraph(series, now, t))); err != nil {

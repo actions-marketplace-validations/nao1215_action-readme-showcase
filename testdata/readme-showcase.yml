@@ -2,7 +2,7 @@
 owner: nao1215
 starHistory:
   repos: [gup, sqly]
-  minStars: 100
+  total: true
 sections:
   - groups:
       - title: Go CLI tools

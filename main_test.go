@@ -116,7 +116,6 @@ func runIn(dir string, extra ...string) (string, error) {
 const twoRepoConfig = `
 starHistory:
   repos: [big, small]
-  minStars: 150
 sections:
   - groups:
       - title: Tools
@@ -132,7 +131,6 @@ func TestRunSelectsStarHistoryIndependently(t *testing.T) {
 	config := `
 starHistory:
   repos: [other/graph-only, plain, small]
-  minStars: 10
 sections:
   - groups:
       - title: Tools
@@ -152,14 +150,14 @@ sections:
 		t.Fatal(err)
 	}
 	svg := string(graph)
-	if !strings.Contains(svg, "other/graph-only 20") || !strings.Contains(svg, "plain 10") || strings.Contains(svg, "featured") || strings.Contains(svg, "small") {
+	if !strings.Contains(svg, "other/graph-only 20") || !strings.Contains(svg, "plain 10") || strings.Contains(svg, "featured") || !strings.Contains(svg, "small 9") {
 		t.Fatalf("graph does not follow the explicit selection: %s", svg)
 	}
 	if strings.Index(svg, "other/graph-only 20") > strings.Index(svg, "plain 10") {
 		t.Error("graph does not preserve the configured order")
 	}
-	if fake.starRequests != 2 {
-		t.Errorf("stargazer requests = %d, want 2", fake.starRequests)
+	if fake.starRequests != 3 {
+		t.Errorf("stargazer requests = %d, want 3", fake.starRequests)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "cards", "light", "other__graph-only.svg")); !os.IsNotExist(err) {
 		t.Errorf("graph-only repository unexpectedly produced a card: %v", err)
@@ -192,12 +190,12 @@ func TestRunWritesCardsGraphAndReadme(t *testing.T) {
 		}
 	}
 	graph, _ := os.ReadFile(filepath.Join(dir, "cards", "star-history-light.svg"))
-	if !strings.Contains(string(graph), "big 250") || strings.Contains(string(graph), "small") {
-		t.Errorf("graph should show only big (250 >= 150):\n%s", graph)
+	if !strings.Contains(string(graph), "big 250") || !strings.Contains(string(graph), "small 3") {
+		t.Errorf("graph should show both selected repositories:\n%s", graph)
 	}
-	// Two pages of weekly history for big, none for the repos under minStars.
-	if fake.starRequests != 2 {
-		t.Errorf("stargazer requests = %d, want 2", fake.starRequests)
+	// Two pages of weekly history for big and one for small.
+	if fake.starRequests != 3 {
+		t.Errorf("stargazer requests = %d, want 3", fake.starRequests)
 	}
 	readme, _ := os.ReadFile(filepath.Join(dir, "README.md"))
 	for _, want := range []string{"# Hi\n", "cards/star-history-dark.svg", `alt="me/big"`, `alt="other/plain"`, "bye\n"} {

@@ -12,17 +12,13 @@ import (
 	"time"
 )
 
-// fetchStarSeries returns, for each explicitly selected repository with at least
-// cfg.StarHistory.MinStars stars, in graph configuration order,
+// fetchStarSeries returns, for each explicitly selected repository in graph order,
 // the daily star history, oldest first. GitHub supplies daily aggregate counts,
 // so these dates do not represent individual stargazers or exact event times.
 func fetchStarSeries(ctx context.Context, client *http.Client, token string, cfg *Config, infos map[string]RepoInfo) ([]StarSeries, error) {
 	var out []StarSeries
 	for _, selected := range cfg.StarHistory.Repos {
 		info := infos[selected]
-		if info.Stars < cfg.StarHistory.MinStars {
-			continue
-		}
 		dates, err := fetchRepoStarDates(ctx, client, token, info.Owner, info.Name)
 		if err != nil {
 			return nil, fmt.Errorf("stargazers of %s/%s: %w", info.Owner, info.Name, err)

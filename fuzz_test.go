@@ -83,7 +83,7 @@ func FuzzReplaceBetweenMarkers(f *testing.F) {
 // must name every repository validly.
 func FuzzParseConfig(f *testing.F) {
 	f.Add([]byte("sections:\n  - groups:\n      - title: T\n        repos:\n          - name: a\n            featured: true\n"))
-	f.Add([]byte(`{"owner":"me","starHistory":{"minStars":-1},"sections":[]}`))
+	f.Add([]byte(`{"owner":"me","starHistory":{"total":true},"sections":[]}`))
 	f.Add([]byte("sections: [{groups: [{title: T, repos: [{name: a/b/c}]}]}]"))
 	f.Add([]byte("*a"))
 	f.Fuzz(func(t *testing.T, data []byte) {

@@ -29,6 +29,22 @@ type StarSeries struct {
 	Dates []time.Time // oldest first
 }
 
+// graphSeries reserves one line for total when enabled. The total includes
+// every selected repository, even those beyond the graph's display limit.
+func graphSeries(series []StarSeries, total bool) []StarSeries {
+	if !total {
+		return series
+	}
+	combined := StarSeries{Name: "total"}
+	for _, s := range series {
+		combined.Dates = append(combined.Dates, s.Dates...)
+	}
+	sort.Slice(combined.Dates, func(i, j int) bool {
+		return combined.Dates[i].Before(combined.Dates[j])
+	})
+	return append([]StarSeries{combined}, series[:min(len(series), maxStarSeries-1)]...)
+}
+
 // renderStarGraph draws the cumulative stars of each repository over time as
 // a standalone SVG document. now is the right edge of the time axis.
 func renderStarGraph(series []StarSeries, now time.Time, t Theme) string {
