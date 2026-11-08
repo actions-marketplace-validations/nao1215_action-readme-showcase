@@ -39,11 +39,11 @@ scenarios:
                   primaryLanguage: null
                   latestRelease: null
           - method: GET
-            path: /repos/me/tool/stargazers
+            path: /repos/me/tool/stargazers/history
             json:
-              - starred_at: "2024-01-02T03:04:05Z"
-              - starred_at: "2024-06-01T00:00:00Z"
-              - starred_at: "2025-02-03T00:00:00Z"
+              - week: 1704585600
+                total: 3
+                days: [0, 1, 0, 0, 0, 0, 2]
     env: &env
       GITHUB_API_URL: ${api.url}
       GITHUB_GRAPHQL_URL: ${api.url}/graphql
@@ -197,10 +197,10 @@ scenarios:
       - assert:
           mock:
             name: api
-            path: /repos/other/lib/stargazers
+            path: /repos/other/lib/stargazers/history
             count: 0
 
-  - name: the Actions token is refused and the error says what to do
+  - name: a token without repository access is refused and the error says what to do
     mock_servers:
       - name: api
         routes:
@@ -216,7 +216,7 @@ scenarios:
                   forkCount: 0
                   isArchived: false
           - method: GET
-            path: /repos/me/tool/stargazers
+            path: /repos/me/tool/stargazers/history
             status: 403
             json: { message: Resource not accessible by integration }
     env: *env
@@ -240,7 +240,7 @@ scenarios:
       - assert:
           exit_code: 1
           stderr:
-            contains: "needs a personal access token"
+            contains: "read access to the selected repositories"
 
   - name: a misspelled config key is an error, not ignored
     env:
