@@ -6,6 +6,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Read aggregate star history with Metadata read permission instead of the restricted stargazers list. Graphs use daily counts and no longer require access to individual stargazers.
+
 ### Changed
 
 - Star history now requires `starHistory.repos`, independent of card highlighting. Add an explicit list when upgrading from v0.1.0; graph-only repositories are supported.

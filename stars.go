@@ -14,9 +14,8 @@ import (
 
 // fetchStarSeries returns, for each explicitly selected repository with at least
 // cfg.StarHistory.MinStars stars, in graph configuration order,
-// when each of its stars was given, oldest first. Stars of users who later
-// deleted their account are gone from the API, so a line can end a little
-// below the count on the card.
+// the daily star history, oldest first. GitHub supplies daily aggregate counts,
+// so these dates do not represent individual stargazers or exact event times.
 func fetchStarSeries(ctx context.Context, client *http.Client, token string, cfg *Config, infos map[string]RepoInfo) ([]StarSeries, error) {
 	var out []StarSeries
 	for _, selected := range cfg.StarHistory.Repos {
@@ -38,32 +37,42 @@ func fetchStarSeries(ctx context.Context, client *http.Client, token string, cfg
 	return out, nil
 }
 
-// fetchRepoStarDates pages through the REST stargazers list. The GraphQL
-// stargazers connection is not readable with the Actions GITHUB_TOKEN.
+// fetchRepoStarDates reads daily counts from GitHub's aggregate history API.
+// Unlike the stargazers list, this endpoint needs only Metadata read access.
 func fetchRepoStarDates(ctx context.Context, client *http.Client, token, owner, name string) ([]time.Time, error) {
 	var out []time.Time
-	for page := 1; ; page++ {
-		url := fmt.Sprintf("%s/repos/%s/%s/stargazers?per_page=100&page=%d", restEndpoint, owner, name, page)
-		var stars []struct {
-			StarredAt time.Time `json:"starred_at"`
+	for page := 1; page <= 100; page++ {
+		url := fmt.Sprintf("%s/repos/%s/%s/stargazers/history?per_page=30&page=%d", restEndpoint, owner, name, page)
+		var weeks []struct {
+			Week int64 `json:"week"`
+			Days []int `json:"days"`
 		}
-		if err := getWithRetry(ctx, client, token, url, &stars); err != nil {
+		if err := getWithRetry(ctx, client, token, url, &weeks); err != nil {
 			return nil, err
 		}
-		for _, st := range stars {
-			out = append(out, st.StarredAt)
+		for _, week := range weeks {
+			if len(week.Days) != 7 {
+				return nil, fmt.Errorf("star history week %d has %d days, want 7", week.Week, len(week.Days))
+			}
+			for day, count := range week.Days {
+				if count < 0 {
+					return nil, fmt.Errorf("star history week %d has a negative count", week.Week)
+				}
+				date := time.Unix(week.Week, 0).UTC().AddDate(0, 0, day)
+				for range count {
+					out = append(out, date)
+				}
+			}
 		}
-		if len(stars) < 100 {
+		if len(weeks) < 30 {
 			return out, nil
 		}
 	}
+	return nil, errors.New("star history exceeds the API's 100-page limit")
 }
 
-// errNeedsPersonalToken explains the one setup mistake everyone makes: the
-// token GitHub Actions hands out cannot list stargazers.
-var errNeedsPersonalToken = errors.New("listing stargazers needs a personal access token; " +
-	"the token GitHub Actions provides is refused. Create a fine-grained token with " +
-	"read-only access to public repositories and pass it as the token input, or remove starHistory from the config")
+var errStarHistoryAccess = errors.New("star history needs a token with read access to the selected repositories; " +
+	"check the token input and Metadata read permission")
 
 func getWithRetry(ctx context.Context, client *http.Client, token, url string, out any) error {
 	var lastErr error
@@ -76,7 +85,7 @@ func getWithRetry(ctx context.Context, client *http.Client, token, url string, o
 			}
 		}
 		lastErr = get(ctx, client, token, url, out)
-		if lastErr == nil || errors.Is(lastErr, errNeedsPersonalToken) {
+		if lastErr == nil || errors.Is(lastErr, errStarHistoryAccess) {
 			return lastErr
 		}
 	}
@@ -89,7 +98,7 @@ func get(ctx context.Context, client *http.Client, token, url string, out any) e
 		return err
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Accept", "application/vnd.github.star+json")
+	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 	req.Header.Set("User-Agent", "readme-showcase")
 
@@ -103,11 +112,11 @@ func get(ctx context.Context, client *http.Client, token, url string, out any) e
 	if err != nil {
 		return err
 	}
-	if res.StatusCode == http.StatusForbidden && bytes.Contains(data, []byte("Resource not accessible by integration")) {
-		return errNeedsPersonalToken
+	if res.StatusCode == http.StatusForbidden && bytes.Contains(data, []byte("Resource not accessible")) {
+		return errStarHistoryAccess
 	}
 	if res.StatusCode == http.StatusUnauthorized {
-		return errNeedsPersonalToken
+		return errStarHistoryAccess
 	}
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("github rest: %s: %s", res.Status, bytes.TrimSpace(data))
