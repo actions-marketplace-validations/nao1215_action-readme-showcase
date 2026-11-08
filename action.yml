@@ -47,6 +47,7 @@ runs:
         ACTION_REF: ${{ github.action_ref }}
         RUNNER_OS: ${{ runner.os }}
         RUNNER_ARCH: ${{ runner.arch }}
+        RUNNER_TOOL_CACHE: ${{ runner.tool_cache }}
       run: bash "${GITHUB_ACTION_PATH}/scripts/install.sh"
 
     - id: run

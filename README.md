@@ -140,7 +140,7 @@ Cards come two to a row in the order you list them. A misspelled key is an error
 
 ## How it runs
 
-The action downloads the prebuilt `readme-showcase` binary for the runner (Linux, macOS, or Windows on amd64 or arm64) from this repository's release, checks it against `checksums.txt`, and runs it. `@v0` resolves to the newest `v0.x.y` release. Referencing a branch or a commit SHA builds the binary from source with the Go that GitHub's runner images include.
+The action downloads the prebuilt `readme-showcase` binary for the runner (Linux, macOS, or Windows on amd64 or arm64) from this repository's release, checks it against `checksums.txt`, and runs it. `@v0` resolves to the newest `v0.x.y` release. Referencing a branch or a commit SHA builds the binary from source with the Go in GitHub's runner images (on PATH, or in the tool cache on macOS).
 
 The binary also runs outside Actions:
 

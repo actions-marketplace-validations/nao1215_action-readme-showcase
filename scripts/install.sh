@@ -190,13 +190,27 @@ download() {
   rm -rf "$work"
 }
 
+# find_go prints a go command: the one on PATH, or else the newest in the
+# runner's tool cache. The macOS images keep Go only in the tool cache.
+find_go() {
+  if command -v go >/dev/null 2>&1; then
+    command -v go
+    return 0
+  fi
+  local cache="${RUNNER_TOOL_CACHE:-}" found
+  [ -n "$cache" ] && [ -d "${cache}/go" ] || return 1
+  found="$(find "${cache}/go" -path "*/bin/go${BIN_SUFFIX}" -type f 2>/dev/null | sort -V | tail -n1)"
+  [ -n "$found" ] || return 1
+  printf '%s\n' "$found"
+}
+
 build_from_source() {
-  local dest_dir="$1" src="${GITHUB_ACTION_PATH:-}"
+  local dest_dir="$1" src="${GITHUB_ACTION_PATH:-}" go
   [ -n "$src" ] || die "GITHUB_ACTION_PATH is not set"
-  command -v go >/dev/null 2>&1 \
-    || die "the action was not referenced at a release tag, so it builds from source, but Go is not installed; reference a release (uses: ${OWNER}/${REPO}@v0) or set the version input"
-  log "Building ${BINARY} from ${src} ($(go version))"
-  (cd "$src" && CGO_ENABLED=0 go build -trimpath -o "${dest_dir}/${BINARY}${BIN_SUFFIX}" .)
+  go="$(find_go)" \
+    || die "the action was not referenced at a release tag, so it builds from source, but Go was not found; reference a release (uses: ${OWNER}/${REPO}@v0), set the version input, or run actions/setup-go first"
+  log "Building ${BINARY} from ${src} ($("$go" version))"
+  (cd "$src" && CGO_ENABLED=0 "$go" build -trimpath -o "${dest_dir}/${BINARY}${BIN_SUFFIX}" .)
 }
 
 main() {

@@ -62,6 +62,32 @@ check_fails "" "v1"
 check_fails "" "v9"
 check_fails "nightly" ""
 
+# find_go falls back to the newest Go in the tool cache when none is on PATH.
+cache="$(mktemp -d)"
+# A PATH with the tools find_go uses but no go.
+nogo="$(mktemp -d)"
+for tool in find sort tail; do
+  ln -s "$(command -v "$tool")" "${nogo}/${tool}"
+done
+for v in 1.25.9 1.26.10 1.26.2; do
+  mkdir -p "${cache}/go/${v}/arm64/bin"
+  printf '#!/bin/sh\n' >"${cache}/go/${v}/arm64/bin/go"
+done
+got="$(PATH="$nogo" RUNNER_TOOL_CACHE="$cache" BIN_SUFFIX="" find_go)"
+if [ "$got" != "${cache}/go/1.26.10/arm64/bin/go" ]; then
+  printf 'FAIL: find_go -> %s\n' "$got"
+  failures=$((failures + 1))
+else
+  printf 'ok:   find_go -> tool cache 1.26.10\n'
+fi
+if (PATH="$nogo" RUNNER_TOOL_CACHE="$(mktemp -d)" BIN_SUFFIX="" find_go) >/dev/null; then
+  printf 'FAIL: find_go found Go in an empty tool cache\n'
+  failures=$((failures + 1))
+else
+  printf 'ok:   find_go -> not found\n'
+fi
+rm -rf "$cache" "$nogo"
+
 if [ "$failures" -gt 0 ]; then
   printf '%d failure(s)\n' "$failures"
   exit 1
