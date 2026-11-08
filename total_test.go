@@ -110,6 +110,15 @@ sections:
 	if fake.starRequests != 11 {
 		t.Fatalf("history requests = %d, want 11", fake.starRequests)
 	}
+	readme, err := os.ReadFile(filepath.Join(dir, "README.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, theme := range themes {
+		if !strings.Contains(string(readme), starGraphFile(theme.Name)+"?view=all-public-total") {
+			t.Fatal("total graph reuses the individual-only image URL")
+		}
+	}
 	for _, theme := range themes {
 		data, err := os.ReadFile(filepath.Join(dir, "cards", starGraphFile(theme.Name)))
 		if err != nil {

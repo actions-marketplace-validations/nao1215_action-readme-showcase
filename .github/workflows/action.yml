@@ -98,5 +98,5 @@ jobs:
           grep -q 'Star history: total (all public) ' testdata/cards/star-history-light.svg
           grep -q 'gup' testdata/cards/star-history-light.svg
           grep -q 'sqly' testdata/cards/star-history-dark.svg
-          grep -q 'cards/star-history-dark.svg' testdata/README.md
+          grep -Fq 'cards/star-history-dark.svg?view=all-public-total' testdata/README.md
           grep -q 'Kept as is.' testdata/README.md

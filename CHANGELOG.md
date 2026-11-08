@@ -6,6 +6,19 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-09
+
+### Added
+
+- `starHistory.total: true` draws the combined history of all public repositories owned by `owner`, independently of individual graph lines and cards. Forks and archived repositories are included; private and other-owner repositories are excluded.
+- Graphs and README image descriptions identify the total's scope. Public repository listing is paginated, shared histories are fetched once, and failed reads never produce a partial total.
+
+### Changed
+
+- Removed `starHistory.minStars`. Delete this key from existing configurations; every repository in `starHistory.repos` is now selected regardless of its star count.
+- With total enabled, the graph shows the total plus up to five individual lines. The display limit does not restrict the total.
+- Total graphs use a distinct README image URL so switching from individual-only graphs refreshes cached images.
+
 ## [0.2.0] - 2026-11-08
 
 ### Fixed

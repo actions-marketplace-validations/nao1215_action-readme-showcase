@@ -15,7 +15,7 @@ It needs nothing but GitHub and GitHub Actions. The action reads the GitHub API,
 <picture><source media="(prefers-color-scheme: dark)" srcset="doc/img/dark/nao1215__gup.svg"><img src="doc/img/light/nao1215__gup.svg" width="400" alt="nao1215/gup"></picture>
 <picture><source media="(prefers-color-scheme: dark)" srcset="doc/img/dark/nao1215__sqly.svg"><img src="doc/img/light/nao1215__sqly.svg" width="400" alt="nao1215/sqly"></picture>
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="doc/img/star-history-dark.svg"><img src="doc/img/star-history-light.svg" width="808" alt="Star history"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="doc/img/star-history-dark.svg?view=all-public-total"><img src="doc/img/star-history-light.svg?view=all-public-total" width="808" alt="Star history"></picture>
 
 ```mermaid
 sequenceDiagram
