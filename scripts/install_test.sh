@@ -80,13 +80,14 @@ if [ "$got" != "${cache}/go/1.26.10/arm64/bin/go" ]; then
 else
   printf 'ok:   find_go -> tool cache 1.26.10\n'
 fi
-if (PATH="$nogo" RUNNER_TOOL_CACHE="$(mktemp -d)" BIN_SUFFIX="" find_go) >/dev/null; then
+empty="$(mktemp -d)"
+if (PATH="$nogo" RUNNER_TOOL_CACHE="$empty" BIN_SUFFIX="" find_go) >/dev/null; then
   printf 'FAIL: find_go found Go in an empty tool cache\n'
   failures=$((failures + 1))
 else
   printf 'ok:   find_go -> not found\n'
 fi
-rm -rf "$cache" "$nogo"
+rm -rf "$cache" "$nogo" "$empty"
 
 if [ "$failures" -gt 0 ]; then
   printf '%d failure(s)\n' "$failures"
