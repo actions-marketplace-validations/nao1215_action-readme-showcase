@@ -162,7 +162,9 @@ func (w *writer) remove(path string) error {
 }
 
 // writeCards writes every card in every theme and removes cards of
-// repositories that are no longer listed.
+// repositories that are no longer listed. Only files named like a card
+// (owner__name.svg) are removed, so other images that share the directory
+// are left alone.
 func writeCards(w *writer, cfg *Config, infos map[string]RepoInfo, outDir string) error {
 	for _, t := range themes {
 		dir := filepath.Join(outDir, t.Name)
@@ -184,7 +186,7 @@ func writeCards(w *writer, cfg *Config, infos map[string]RepoInfo, outDir string
 			return err
 		}
 		for _, e := range entries {
-			if !e.IsDir() && strings.HasSuffix(e.Name(), ".svg") && !keep[e.Name()] {
+			if !e.IsDir() && isCardFile(e.Name()) && !keep[e.Name()] {
 				if err := w.remove(filepath.Join(dir, e.Name())); err != nil {
 					return err
 				}
@@ -192,6 +194,16 @@ func writeCards(w *writer, cfg *Config, infos map[string]RepoInfo, outDir string
 		}
 	}
 	return nil
+}
+
+// isCardFile reports whether a file name has the shape cardFile gives.
+func isCardFile(name string) bool {
+	base, ok := strings.CutSuffix(name, ".svg")
+	if !ok {
+		return false
+	}
+	owner, repo, ok := strings.Cut(base, "__")
+	return ok && owner != "" && repo != ""
 }
 
 // setOutput writes a step output when running inside GitHub Actions.

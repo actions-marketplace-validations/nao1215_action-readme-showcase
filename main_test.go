@@ -175,6 +175,12 @@ func TestRunRemovesStaleFiles(t *testing.T) {
 		t.Fatalf("run: %v\n%s", err, out)
 	}
 
+	// An image of the user's own in the same directory must survive.
+	own := filepath.Join(dir, "cards", "light", "logo.svg")
+	if err := os.WriteFile(own, []byte("<svg/>"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
 	// Drop starHistory and a repository.
 	cfg := "sections:\n  - groups:\n      - title: Tools\n        repos:\n          - name: big\n"
 	if err := os.WriteFile(filepath.Join(dir, "showcase.yml"), []byte(cfg), 0o644); err != nil {
@@ -187,6 +193,9 @@ func TestRunRemovesStaleFiles(t *testing.T) {
 		if _, err := os.Stat(filepath.Join(dir, "cards", f)); !os.IsNotExist(err) {
 			t.Errorf("%s was not removed: %v", f, err)
 		}
+	}
+	if _, err := os.Stat(own); err != nil {
+		t.Errorf("an image that is not a card was removed: %v", err)
 	}
 	readme, _ := os.ReadFile(filepath.Join(dir, "README.md"))
 	if strings.Contains(string(readme), "star-history") {

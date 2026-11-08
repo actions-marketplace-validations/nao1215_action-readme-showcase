@@ -8,7 +8,9 @@
 
 # action-readme-showcase
 
-A GitHub Action that draws a card for each repository you list, plus an optional star history graph, and puts them in your README. The cards are SVG files in your own repository with a light and a dark version, so they follow the reader's GitHub theme and do not depend on an image service being up.
+A GitHub Action that draws a card for each repository you list, plus an optional star history graph, and puts them in your README.
+
+It needs nothing but GitHub and GitHub Actions. The action reads the GitHub API, writes the cards as SVG files, and your workflow commits them to your own repository. There is no image service to sign up for, and no third-party server the README depends on to show the images. Each card has a light and a dark version, so it follows the reader's GitHub theme.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="doc/img/dark/nao1215__gup.svg"><img src="doc/img/light/nao1215__gup.svg" width="400" alt="nao1215/gup"></picture>
 <picture><source media="(prefers-color-scheme: dark)" srcset="doc/img/dark/nao1215__sqly.svg"><img src="doc/img/light/nao1215__sqly.svg" width="400" alt="nao1215/sqly"></picture>
@@ -71,7 +73,23 @@ jobs:
           git push
 ```
 
-The cards go to `cards/light/` and `cards/dark/`. Run the workflow once from the Actions tab to fill the README right away.
+Run the workflow once from the Actions tab to fill the README right away.
+
+The SVG files go to `cards/` next to the README: `cards/light/`, `cards/dark/`, and the graph as `cards/star-history-light.svg` and `cards/star-history-dark.svg`. To keep them somewhere else, set `cards-dir` to a directory relative to the README, and add the same directory in the commit step:
+
+```yaml
+      - id: showcase
+        uses: nao1215/action-readme-showcase@v0
+        with:
+          cards-dir: .github/showcase
+
+      - if: steps.showcase.outputs.changed == 'true'
+        run: |
+          ...
+          git add README.md .github/showcase
+```
+
+The action deletes a card when its repository leaves the config. It only touches files named like its cards (`owner__repo.svg`) and its two graph files, so other images in the same directory are safe.
 
 ## Star history
 

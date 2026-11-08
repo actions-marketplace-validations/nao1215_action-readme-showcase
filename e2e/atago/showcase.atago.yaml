@@ -126,6 +126,41 @@ scenarios:
           stdout:
             contains: "changed=false"
 
+  - name: cards can go to another directory without touching its other images
+    mock_servers:
+      - *github
+    env: *env
+    steps:
+      - *readme
+      - fixture:
+          file: .github/showcase/light/logo.svg
+          content: "<svg/>"
+      - fixture:
+          file: showcase.yml
+          content: |
+            owner: me
+            sections:
+              - groups:
+                  - title: Mine
+                    repos:
+                      - name: tool
+      - run:
+          command: readme-showcase -config showcase.yml -cards .github/showcase
+      - assert:
+          exit_code: 0
+      - assert:
+          file:
+            path: README.md
+            contains: 'srcset=".github/showcase/dark/me__tool.svg"'
+      - assert:
+          file:
+            path: .github/showcase/light/me__tool.svg
+            contains: "me/tool"
+      - assert:
+          file:
+            path: .github/showcase/light/logo.svg
+            equals: "<svg/>"
+
   - name: the star history graph draws featured repositories over minStars
     mock_servers:
       - *github
