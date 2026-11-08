@@ -1,8 +1,10 @@
+![Coverage](https://raw.githubusercontent.com/nao1215/octocovs-central-repo/main/badges/nao1215/action-readme-showcase/coverage.svg)
 [![UnitTest](https://github.com/nao1215/action-readme-showcase/actions/workflows/unit_test.yml/badge.svg)](https://github.com/nao1215/action-readme-showcase/actions/workflows/unit_test.yml)
 [![E2E](https://github.com/nao1215/action-readme-showcase/actions/workflows/e2e.yml/badge.svg)](https://github.com/nao1215/action-readme-showcase/actions/workflows/e2e.yml)
 [![Action](https://github.com/nao1215/action-readme-showcase/actions/workflows/action.yml/badge.svg)](https://github.com/nao1215/action-readme-showcase/actions/workflows/action.yml)
 [![tested with atago](https://img.shields.io/badge/tested%20with-atago-7c3aed?logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTMuNiA0LjIgMTEuOSAxMmwtOC4zIDcuOC0xLjktMi4yTDcuOSAxMiAxLjcgNi40eiIvPjxyZWN0IGZpbGw9IiNmZmYiIHg9IjEyLjYiIHk9IjE3LjIiIHdpZHRoPSI5LjciIGhlaWdodD0iMi44IiByeD0iMS40Ii8%2BPC9zdmc%2B&logoColor=white)](https://github.com/nao1215/atago)
 ![GitHub](https://img.shields.io/github/license/nao1215/action-readme-showcase)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/nao1215/action-readme-showcase/badge)](https://scorecard.dev/viewer/?uri=github.com/nao1215/action-readme-showcase)
 
 # action-readme-showcase
 
@@ -154,9 +156,10 @@ On GitHub Enterprise Server, `GITHUB_API_URL` and `GITHUB_GRAPHQL_URL`, which Ac
 ## Development
 
 ```shell
-make test   # unit tests
-make e2e    # atago specs against a stub GitHub API, no network needed
-make lint   # golangci-lint, shellcheck, actionlint
+make test       # unit tests
+make e2e        # atago specs against a stub GitHub API, no network needed
+make coverage   # unit and E2E coverage merged into cover.out
+make lint       # golangci-lint, shellcheck, actionlint
 ```
 
 To release, push a `vX.Y.Z` tag. The Release workflow builds the binaries into a draft release. Open the draft, tick "Publish this Action to the GitHub Marketplace", and publish it; that moves the `v0` and `v0.x` tags to the new release.

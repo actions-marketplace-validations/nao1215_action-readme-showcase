@@ -13,17 +13,17 @@ permissions:
 jobs:
   unit_test:
     name: Unit test (${{ matrix.os }}, Go ${{ matrix.go }})
-    # "1.24" is the floor go.mod declares; "stable" is the newest release.
+    # "1.26" is the floor go.mod declares; "stable" is the newest release.
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        go: ["1.24", "stable"]
+        go: ["1.26", "stable"]
         exclude:
           - os: macos-latest
-            go: "1.24"
+            go: "1.26"
           - os: windows-latest
-            go: "1.24"
+            go: "1.26"
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:

@@ -6,3 +6,11 @@ subject:
   build:
     command: "go build -o ${artifact} ."
     cwd: "../.."
+profiles:
+  # make coverage: a binary that writes runtime coverage to GOCOVERDIR, which
+  # reaches it from the caller's environment. (Restating it here as
+  # GOCOVERDIR: "${env:GOCOVERDIR}" passes the text unexpanded in atago v0.26.0.)
+  cover:
+    build:
+      command: "go build -cover -covermode=atomic -coverpkg=./... -o ${artifact} ."
+      cwd: "../.."
