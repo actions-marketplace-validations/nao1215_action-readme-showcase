@@ -39,6 +39,22 @@ scenarios:
                   primaryLanguage: null
                   latestRelease: null
           - method: GET
+            path: /users/me/repos
+            json:
+              - name: tool
+                owner: { login: me }
+                private: false
+              - name: unlisted
+                owner: { login: me }
+                private: false
+                fork: true
+                archived: true
+          - method: GET
+            path: /repos/me/unlisted/stargazers/history
+            json:
+              - week: 1704585600
+                days: [2, 0, 0, 0, 0, 0, 0]
+          - method: GET
             path: /repos/me/tool/stargazers/history
             json:
               - week: 1704585600
@@ -161,7 +177,7 @@ scenarios:
             path: .github/showcase/light/logo.svg
             equals: "<svg/>"
 
-  - name: the star history graph draws explicitly selected repositories over minStars
+  - name: the star history graph draws explicitly selected repositories and their total
     mock_servers:
       - *github
     env: *env
@@ -173,7 +189,7 @@ scenarios:
             owner: me
             starHistory:
               repos: [tool]
-              minStars: 2
+              total: true
             sections:
               - groups:
                   - title: Mine
@@ -188,7 +204,7 @@ scenarios:
       - assert:
           file:
             path: cards/star-history-light.svg
-            contains: "Star history: tool 3"
+            contains: "Star history: total (all public) 5, tool 3"
       - assert:
           file:
             path: README.md
@@ -228,7 +244,6 @@ scenarios:
             owner: me
             starHistory:
               repos: [tool]
-              minStars: 0
             sections:
               - groups:
                   - title: Mine

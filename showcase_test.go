@@ -201,14 +201,13 @@ func TestConfigValidate(t *testing.T) {
 		t.Errorf("valid config rejected: %v", err)
 	}
 	for name, cfg := range map[string]Config{
-		"no owner":       {Sections: ok.Sections},
-		"no repos":       {Owner: "o"},
-		"duplicate":      {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: "a"}, {Name: "O/A"}}}}}}},
-		"bad name":       {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: "a/b/c"}}}}}}},
-		"no title":       {Owner: "o", Sections: []Section{{Groups: []Group{{Repos: []RepoSpec{{Name: "a"}}}}}}},
-		"bad color":      {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: "a", Language: &Language{Name: "gozen", Color: "pink"}}}}}}}},
-		"empty name":     {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: ""}}}}}}},
-		"negative stars": {Owner: "o", StarHistory: &StarHistory{MinStars: -1}, Sections: ok.Sections},
+		"no owner":   {Sections: ok.Sections},
+		"no repos":   {Owner: "o"},
+		"duplicate":  {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: "a"}, {Name: "O/A"}}}}}}},
+		"bad name":   {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: "a/b/c"}}}}}}},
+		"no title":   {Owner: "o", Sections: []Section{{Groups: []Group{{Repos: []RepoSpec{{Name: "a"}}}}}}},
+		"bad color":  {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: "a", Language: &Language{Name: "gozen", Color: "pink"}}}}}}}},
+		"empty name": {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: ""}}}}}}},
 	} {
 		if err := cfg.validate(); err == nil {
 			t.Errorf("%s: expected an error", name)
@@ -219,7 +218,8 @@ func TestConfigValidate(t *testing.T) {
 func TestStarHistoryRequiresExplicitUniqueRepositories(t *testing.T) {
 	t.Parallel()
 	for _, history := range []string{
-		"minStars: 100",
+		"total: true",
+		"repos: [tool], minStars: 100",
 		"repos: []",
 		"repos: ['']",
 		"repos: ['   ']",
@@ -250,7 +250,7 @@ func TestLoadConfig(t *testing.T) {
 	cfg, err := loadConfig(write("ok.yml", `
 starHistory:
   repos: [gup, other/tool]
-  minStars: 10
+  total: true
 sections:
   - summary: Folded
     groups:
@@ -264,7 +264,7 @@ sections:
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Owner != "fallback" || cfg.StarHistory == nil || cfg.StarHistory.MinStars != 10 {
+	if cfg.Owner != "fallback" || cfg.StarHistory == nil || !cfg.StarHistory.Total {
 		t.Errorf("unexpected config: %+v", cfg)
 	}
 	if r := cfg.Repos(); len(r) != 2 || !r[0].Featured || r[1].Language.Name != "gozen" {

@@ -25,8 +25,8 @@ type Config struct {
 type StarHistory struct {
 	// Repos lists names or owner/name pairs in graph order.
 	Repos []string `yaml:"repos"`
-	// MinStars is how many stars a selected repository needs to be drawn.
-	MinStars int `yaml:"minStars"`
+	// Total adds the combined history of all public repositories owned by Config.Owner.
+	Total bool `yaml:"total"`
 }
 
 // Section is a run of groups. A section with a Summary is folded into a
@@ -100,9 +100,6 @@ func parseConfig(data []byte, defaultOwner string) (*Config, error) {
 func (c *Config) validate() error {
 	if c.Owner == "" {
 		return errors.New("owner is empty; set owner in the config or run inside GitHub Actions")
-	}
-	if c.StarHistory != nil && c.StarHistory.MinStars < 0 {
-		return errors.New("starHistory.minStars is negative")
 	}
 	if c.StarHistory != nil {
 		if len(c.StarHistory.Repos) == 0 {

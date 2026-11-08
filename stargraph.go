@@ -26,6 +26,7 @@ const (
 // StarSeries is one line of the star history graph.
 type StarSeries struct {
 	Name  string
+	Scope string      // explains the public-owner total independently of selected lines
 	Dates []time.Time // oldest first
 }
 
@@ -51,6 +52,13 @@ func renderStarGraph(series []StarSeries, now time.Time, t Theme) string {
 
 	b.WriteString(icon(iconStar, padX, 17, 1, t.Muted))
 	fmt.Fprintf(&b, `<text x="%d" y="30" font-size="%s" font-weight="600" fill="%s">Star history</text>`+"\n", padX+22, num(titleSize), t.Text)
+
+	for _, s := range series {
+		if s.Scope != "" {
+			fmt.Fprintf(&b, `<text x="%d" y="68" font-size="11" fill="%s"><title>%s</title>%s</text>`+"\n",
+				padX, t.Muted, esc(s.Scope), esc(truncate(s.Scope, 11, graphWidth-2*padX)))
+		}
+	}
 
 	// Legend: color swatch, name, and current count of every line.
 	lx := float64(padX)

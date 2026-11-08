@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -21,6 +22,7 @@ type fakeGitHub struct {
 	stars        map[string]int // owner/name -> stars
 	refuseStars  bool           // answer stargazers like the Actions token does
 	starRequests int
+	publicRepos  []string // optional explicit public inventory
 }
 
 var aliasRE = regexp.MustCompile(`(r\d+): repository\(owner: "([^"]+)", name: "([^"]+)"\)`)
@@ -31,6 +33,24 @@ func (f *fakeGitHub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch {
+	case r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/repos"):
+		owner := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/users/"), "/repos")
+		names := f.publicRepos
+		if names == nil {
+			for name := range f.stars {
+				names = append(names, name)
+			}
+		}
+		slices.Sort(names)
+		var repos []map[string]any
+		for _, full := range names {
+			o, n, _ := strings.Cut(full, "/")
+			if strings.EqualFold(o, owner) {
+				repos = append(repos, map[string]any{"name": n, "owner": map[string]string{"login": o}, "private": false})
+			}
+		}
+		_ = json.NewEncoder(w).Encode(repos)
+
 	case r.Method == http.MethodPost && r.URL.Path == "/graphql":
 		var req struct{ Query string }
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -116,7 +136,6 @@ func runIn(dir string, extra ...string) (string, error) {
 const twoRepoConfig = `
 starHistory:
   repos: [big, small]
-  minStars: 150
 sections:
   - groups:
       - title: Tools
@@ -132,7 +151,6 @@ func TestRunSelectsStarHistoryIndependently(t *testing.T) {
 	config := `
 starHistory:
   repos: [other/graph-only, plain, small]
-  minStars: 10
 sections:
   - groups:
       - title: Tools
@@ -152,14 +170,14 @@ sections:
 		t.Fatal(err)
 	}
 	svg := string(graph)
-	if !strings.Contains(svg, "other/graph-only 20") || !strings.Contains(svg, "plain 10") || strings.Contains(svg, "featured") || strings.Contains(svg, "small") {
+	if !strings.Contains(svg, "other/graph-only 20") || !strings.Contains(svg, "plain 10") || strings.Contains(svg, "featured") || !strings.Contains(svg, "small 9") {
 		t.Fatalf("graph does not follow the explicit selection: %s", svg)
 	}
 	if strings.Index(svg, "other/graph-only 20") > strings.Index(svg, "plain 10") {
 		t.Error("graph does not preserve the configured order")
 	}
-	if fake.starRequests != 2 {
-		t.Errorf("stargazer requests = %d, want 2", fake.starRequests)
+	if fake.starRequests != 3 {
+		t.Errorf("stargazer requests = %d, want 3", fake.starRequests)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "cards", "light", "other__graph-only.svg")); !os.IsNotExist(err) {
 		t.Errorf("graph-only repository unexpectedly produced a card: %v", err)
@@ -192,12 +210,12 @@ func TestRunWritesCardsGraphAndReadme(t *testing.T) {
 		}
 	}
 	graph, _ := os.ReadFile(filepath.Join(dir, "cards", "star-history-light.svg"))
-	if !strings.Contains(string(graph), "big 250") || strings.Contains(string(graph), "small") {
-		t.Errorf("graph should show only big (250 >= 150):\n%s", graph)
+	if !strings.Contains(string(graph), "big 250") || !strings.Contains(string(graph), "small 3") {
+		t.Errorf("graph should show both selected repositories:\n%s", graph)
 	}
-	// Two pages of weekly history for big, none for the repos under minStars.
-	if fake.starRequests != 2 {
-		t.Errorf("stargazer requests = %d, want 2", fake.starRequests)
+	// Two pages of weekly history for big and one for small.
+	if fake.starRequests != 3 {
+		t.Errorf("stargazer requests = %d, want 3", fake.starRequests)
 	}
 	readme, _ := os.ReadFile(filepath.Join(dir, "README.md"))
 	for _, want := range []string{"# Hi\n", "cards/star-history-dark.svg", `alt="me/big"`, `alt="other/plain"`, "bye\n"} {
