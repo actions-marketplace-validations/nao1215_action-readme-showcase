@@ -116,7 +116,7 @@ List the repositories in `starHistory.repos` to draw their star history, indepen
 
 ```yaml
 starHistory:
-  repos: [gup, sqly, other-owner/project]
+  repos: [gup, sqly]
   minStars: 100
 sections:
   ...
@@ -124,10 +124,10 @@ sections:
 
 When upgrading from v0.1.0, add `starHistory.repos` explicitly. The graph no longer selects repositories through `featured`.
 
-The graph needs a personal access token. The token GitHub Actions provides can read star counts, which is all the cards need, but GitHub refuses it when listing who starred a repository and when. Without an extra token the action stops with an error that says so.
+The graph needs access to each selected repository's stargazers. GitHub restricts this endpoint to repository admins and collaborators. Pass a personal access token with access to those repositories; a token scoped only to the profile repository is insufficient. See [GitHub's stargazers permissions](https://docs.github.com/en/rest/activity/starring#list-stargazers).
 
 1. Open [Settings > Developer settings > Fine-grained tokens](https://github.com/settings/personal-access-tokens/new).
-2. Set Repository access to "Public repositories". Add no permissions; reading public stars needs none.
+2. Set Resource owner to the account that owns the graph repositories. Under Repository access, select those repositories and keep Metadata read access. Your account must be an admin or collaborator on them.
 3. Pick an expiration and generate the token.
 4. In the repository that runs the workflow, add it under Settings > Secrets and variables > Actions as `STARS_TOKEN`, or from the shell:
 
