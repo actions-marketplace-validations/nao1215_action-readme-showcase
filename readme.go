@@ -28,8 +28,12 @@ func starGraphFile(theme string) string {
 func renderShowcase(cfg *Config, infos map[string]RepoInfo, cardsDir string, starHistory bool) string {
 	var b strings.Builder
 	if starHistory {
-		fmt.Fprintf(&b, `<picture><source media="(prefers-color-scheme: dark)" srcset="%s"><img src="%s" width="808" alt="Star history of the featured repositories"></picture>`+"\n\n",
-			path.Join(cardsDir, starGraphFile("dark")), path.Join(cardsDir, starGraphFile("light")))
+		alt := "Star history of selected repositories"
+		if cfg.StarHistory != nil && cfg.StarHistory.Total {
+			alt += fmt.Sprintf(" and all public repositories owned by %s (total, including forks and archived repositories)", cfg.Owner)
+		}
+		fmt.Fprintf(&b, `<picture><source media="(prefers-color-scheme: dark)" srcset="%s"><img src="%s" width="808" alt="%s"></picture>`+"\n\n",
+			path.Join(cardsDir, starGraphFile("dark")), path.Join(cardsDir, starGraphFile("light")), html.EscapeString(alt))
 	}
 	for i, s := range cfg.Sections {
 		if i > 0 {

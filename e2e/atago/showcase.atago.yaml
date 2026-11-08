@@ -39,6 +39,22 @@ scenarios:
                   primaryLanguage: null
                   latestRelease: null
           - method: GET
+            path: /users/me/repos
+            json:
+              - name: tool
+                owner: { login: me }
+                private: false
+              - name: unlisted
+                owner: { login: me }
+                private: false
+                fork: true
+                archived: true
+          - method: GET
+            path: /repos/me/unlisted/stargazers/history
+            json:
+              - week: 1704585600
+                days: [2, 0, 0, 0, 0, 0, 0]
+          - method: GET
             path: /repos/me/tool/stargazers/history
             json:
               - week: 1704585600
@@ -188,7 +204,7 @@ scenarios:
       - assert:
           file:
             path: cards/star-history-light.svg
-            contains: "Star history: total 3, tool 3"
+            contains: "Star history: total (all public) 5, tool 3"
       - assert:
           file:
             path: README.md

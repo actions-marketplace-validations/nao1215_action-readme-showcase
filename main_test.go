@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -21,6 +22,7 @@ type fakeGitHub struct {
 	stars        map[string]int // owner/name -> stars
 	refuseStars  bool           // answer stargazers like the Actions token does
 	starRequests int
+	publicRepos  []string // optional explicit public inventory
 }
 
 var aliasRE = regexp.MustCompile(`(r\d+): repository\(owner: "([^"]+)", name: "([^"]+)"\)`)
@@ -31,6 +33,24 @@ func (f *fakeGitHub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch {
+	case r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/repos"):
+		owner := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/users/"), "/repos")
+		names := f.publicRepos
+		if names == nil {
+			for name := range f.stars {
+				names = append(names, name)
+			}
+		}
+		slices.Sort(names)
+		var repos []map[string]any
+		for _, full := range names {
+			o, n, _ := strings.Cut(full, "/")
+			if strings.EqualFold(o, owner) {
+				repos = append(repos, map[string]any{"name": n, "owner": map[string]string{"login": o}, "private": false})
+			}
+		}
+		_ = json.NewEncoder(w).Encode(repos)
+
 	case r.Method == http.MethodPost && r.URL.Path == "/graphql":
 		var req struct{ Query string }
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

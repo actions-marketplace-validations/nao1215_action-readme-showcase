@@ -25,7 +25,7 @@ type Config struct {
 type StarHistory struct {
 	// Repos lists names or owner/name pairs in graph order.
 	Repos []string `yaml:"repos"`
-	// Total adds the combined history of all selected repositories.
+	// Total adds the combined history of all public repositories owned by Config.Owner.
 	Total bool `yaml:"total"`
 }
 

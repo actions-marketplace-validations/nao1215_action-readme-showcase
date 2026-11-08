@@ -115,14 +115,24 @@ The action deletes a card when its repository leaves the config. It only touches
 List the repositories in `starHistory.repos` to draw their star history, independently of card highlighting. Names use `owner` by default; `owner/repo` also works. Repositories do not need a card. The graph follows the list order and shows up to six repositories.
 
 ```yaml
+owner: nao1215
 starHistory:
-  repos: [gup, sqly]
-  total: true
+  repos: [gup, sqly] # individual lines
+  total: true       # all public repositories owned by nao1215
 sections:
   ...
 ```
 
-Set `starHistory.total: true` to add a `total` line showing the combined star history of the repositories in `starHistory.repos`. It is disabled by default. With `total` enabled, the graph shows the total and up to five individual repositories; the total includes selected repositories beyond that display limit. It does not automatically include other repositories owned by the account. This uses the same fetched history and needs no extra API requests or token permissions.
+Set `starHistory.total: true` to add **`total (all public)`**, the combined star history of **all public repositories currently owned by `owner`**. The graph names that owner and states the scope. `total` is disabled by default.
+
+| Setting | Scope |
+| --- | --- |
+| `starHistory.repos` | Individual lines, in the listed order. `owner/repo` can select another owner's repository. |
+| `starHistory.total: true` | All public repositories owned by `owner`, including repositories absent from `repos` and the cards. Includes forks and archived repositories; excludes private repositories and other owners' repositories. |
+
+With `total` enabled, the graph displays the total and up to five individual lines. The display limit never restricts the total. For example, `repos: [gup, sqly]` with `owner: nao1215` shows those two individual lines plus the total for **all** of nao1215's public repositories, not just those two. The owner defaults to the account owning the workflow repository; it is not inferred from the token or the owners in `repos`.
+
+The total sums daily histories from GitHub for the current public repository inventory. Deleted, transferred-away, and now-private repositories are not included in past dates either. If any repository listing or history request fails, generation fails instead of publishing a partial total.
 
 The `minStars` option has been removed. Remove it from existing configurations; every explicitly listed repository is now included.
 
@@ -155,7 +165,7 @@ If you want to use a fine-grained personal access token, follow these steps. Thi
        token: ${{ secrets.STARS_TOKEN }}
    ```
 
-When using a PAT, the two repository selections are separate: `starHistory.repos` chooses what to draw; the PAT's Repository access permits those API reads. Update both when adding a graph repository.
+When using a PAT, `starHistory.repos` selects individual lines. With `total: true`, the action also reads histories for all of `owner`'s public repositories, so access limited to the listed graph repositories may be insufficient. The default `${{ github.token }}` works for public data; no new write or user permission is required. If configuring a PAT, ensure Metadata read access covers the entire public inventory used by the total.
 
 The PAT only reads data. Committing the generated files uses the workflow's `permissions: contents: write` and the credentials from `actions/checkout`; it does not need write access on the PAT.
 
@@ -170,7 +180,7 @@ After replacing an expired or regenerated token, update the `STARS_TOKEN` secret
 | HTTP 403 from `/stargazers/history` | Check the PAT's resource owner, selected graph repositories, Metadata read permission, and any organization approval requirement. |
 | HTTP 403 from `/stargazers` on v0.1.0 | Upgrade to v0.2.0 or later. v0.1.0 uses the restricted individual-stargazer API; adding write permissions is unnecessary with the aggregate API. |
 
-Each run makes one GraphQL request for repository metadata and paginated REST requests for the graph, with up to 30 weeks per page.
+Each run makes one GraphQL request for card and selected-repository metadata and paginated REST history requests, with up to 30 weeks per page. With `total: true`, it additionally lists all public repositories (100 per page) and fetches their histories. Histories shared with individual lines are fetched only once. Accounts with many repositories require more API requests and runtime.
 
 ## Config
 
@@ -178,7 +188,7 @@ Each run makes one GraphQL request for repository metadata and paginated REST re
 | --- | --- | --- |
 | `owner` | owner of the repository running the workflow | Owner for names written without `owner/`. |
 | `starHistory.repos` | required with `starHistory` | Repository names in graph order, independent of cards and `featured`. |
-| `starHistory.total` | `false` | Add a `total` line for all selected repositories, including those beyond the individual-line display limit. |
+| `starHistory.total` | `false` | Add `total (all public)` for all public repositories owned by `owner`, including forks and archived repositories, independently of `starHistory.repos`. |
 | `sections[].summary` | none | Folds the section into `<details>` with this summary. |
 | `sections[].groups[].title` | required | Heading above the cards. |
 | `repos[].name` | required | `repo` or `owner/repo`. |
