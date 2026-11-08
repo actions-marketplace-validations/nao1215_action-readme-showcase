@@ -208,7 +208,7 @@ scenarios:
       - assert:
           file:
             path: README.md
-            contains: 'srcset="cards/star-history-dark.svg"'
+            contains: 'srcset="cards/star-history-dark.svg?view=all-public-total"'
       # other/lib has 1.2k stars but is not selected, so it is not fetched.
       - assert:
           mock:

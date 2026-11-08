@@ -29,11 +29,13 @@ func renderShowcase(cfg *Config, infos map[string]RepoInfo, cardsDir string, sta
 	var b strings.Builder
 	if starHistory {
 		alt := "Star history of selected repositories"
+		imageVersion := ""
 		if cfg.StarHistory != nil && cfg.StarHistory.Total {
 			alt += fmt.Sprintf(" and all public repositories owned by %s (total, including forks and archived repositories)", cfg.Owner)
+			imageVersion = "?view=all-public-total"
 		}
 		fmt.Fprintf(&b, `<picture><source media="(prefers-color-scheme: dark)" srcset="%s"><img src="%s" width="808" alt="%s"></picture>`+"\n\n",
-			path.Join(cardsDir, starGraphFile("dark")), path.Join(cardsDir, starGraphFile("light")), html.EscapeString(alt))
+			path.Join(cardsDir, starGraphFile("dark"))+imageVersion, path.Join(cardsDir, starGraphFile("light"))+imageVersion, html.EscapeString(alt))
 	}
 	for i, s := range cfg.Sections {
 		if i > 0 {
