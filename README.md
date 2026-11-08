@@ -124,10 +124,10 @@ sections:
 
 When upgrading from v0.1.0, add `starHistory.repos` explicitly. The graph no longer selects repositories through `featured`.
 
-The graph needs access to each selected repository's stargazers. GitHub restricts this endpoint to repository admins and collaborators. Pass a personal access token with access to those repositories; a token scoped only to the profile repository is insufficient. See [GitHub's stargazers permissions](https://docs.github.com/en/rest/activity/starring#list-stargazers).
+The graph uses GitHub's [aggregate star history API](https://docs.github.com/en/rest/activity/starring#get-repository-star-history), which provides daily counts and requires Metadata read access. It does not read individual stargazers. Pass a token with read access to the selected repositories; no Contents write permission is needed.
 
 1. Open [Settings > Developer settings > Fine-grained tokens](https://github.com/settings/personal-access-tokens/new).
-2. Set Resource owner to the account that owns the graph repositories. Under Repository access, select those repositories and keep Metadata read access. Your account must be an admin or collaborator on them.
+2. Set Resource owner to the account that owns the graph repositories. Under Repository access, select those repositories and keep Metadata read access. No user permissions are needed.
 3. Pick an expiration and generate the token.
 4. In the repository that runs the workflow, add it under Settings > Secrets and variables > Actions as `STARS_TOKEN`, or from the shell:
 

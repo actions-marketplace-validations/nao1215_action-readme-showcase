@@ -16,7 +16,7 @@ import (
 )
 
 // fakeGitHub answers the two API calls the program makes: the batched
-// GraphQL repository query and the REST stargazers list.
+// GraphQL repository query and the REST aggregate star history.
 type fakeGitHub struct {
 	stars        map[string]int // owner/name -> stars
 	refuseStars  bool           // answer stargazers like the Actions token does
@@ -51,21 +51,28 @@ func (f *fakeGitHub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{"data": data})
-	case r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/stargazers"):
+	case r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/stargazers/history"):
 		f.starRequests++
 		if f.refuseStars {
 			w.WriteHeader(http.StatusForbidden)
 			_, _ = io.WriteString(w, `{"message":"Resource not accessible by integration"}`)
 			return
 		}
-		repo := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/repos/"), "/stargazers")
+		repo := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/repos/"), "/stargazers/history")
 		n := f.stars[repo]
 		var page int
 		_, _ = fmt.Sscan(r.URL.Query().Get("page"), &page)
-		var out []map[string]string
-		base := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
-		for i := (page - 1) * 100; i < n && i < page*100; i++ {
-			out = append(out, map[string]string{"starred_at": base.Add(time.Duration(i) * 24 * time.Hour).Format(time.RFC3339)})
+		var out []map[string]any
+		base := time.Date(2022, 1, 2, 0, 0, 0, 0, time.UTC)
+		weeks := (n + 6) / 7
+		for week := (page - 1) * 30; week < weeks && week < page*30; week++ {
+			days := make([]int, 7)
+			for day := range days {
+				if week*7+day < n {
+					days[day] = 1
+				}
+			}
+			out = append(out, map[string]any{"week": base.AddDate(0, 0, week*7).Unix(), "days": days})
 		}
 		_ = json.NewEncoder(w).Encode(out)
 	default:
@@ -188,9 +195,9 @@ func TestRunWritesCardsGraphAndReadme(t *testing.T) {
 	if !strings.Contains(string(graph), "big 250") || strings.Contains(string(graph), "small") {
 		t.Errorf("graph should show only big (250 >= 150):\n%s", graph)
 	}
-	// Two pages of stargazers for big, none for the repos under minStars.
-	if fake.starRequests != 3 {
-		t.Errorf("stargazer requests = %d, want 3", fake.starRequests)
+	// Two pages of weekly history for big, none for the repos under minStars.
+	if fake.starRequests != 2 {
+		t.Errorf("stargazer requests = %d, want 2", fake.starRequests)
 	}
 	readme, _ := os.ReadFile(filepath.Join(dir, "README.md"))
 	for _, want := range []string{"# Hi\n", "cards/star-history-dark.svg", `alt="me/big"`, `alt="other/plain"`, "bye\n"} {
@@ -249,12 +256,12 @@ func TestRunRemovesStaleFiles(t *testing.T) {
 	}
 }
 
-func TestRunExplainsMissingPersonalToken(t *testing.T) {
+func TestRunExplainsMissingHistoryAccess(t *testing.T) {
 	fake := &fakeGitHub{stars: map[string]int{"me/big": 250}, refuseStars: true}
 	dir := setupRun(t, twoRepoConfig, fake)
 	_, err := runIn(dir)
-	if err == nil || !strings.Contains(err.Error(), "personal access token") {
-		t.Fatalf("want a hint about the personal access token, got %v", err)
+	if err == nil || !strings.Contains(err.Error(), "read access to the selected repositories") {
+		t.Fatalf("want a hint about repository read access, got %v", err)
 	}
 	// The refusal is not retried.
 	if fake.starRequests != 1 {
