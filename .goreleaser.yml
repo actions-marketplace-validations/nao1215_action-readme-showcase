@@ -34,6 +34,17 @@ archives:
         dst: THIRD_PARTY_LICENSES
 checksum:
   name_template: "checksums.txt"
+# Keyless cosign signature of checksums.txt, which covers every archive.
+signs:
+  - cmd: cosign
+    signature: "${artifact}.sigstore.json"
+    args:
+      - sign-blob
+      - "--bundle=${signature}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+    output: true
 # The release stays a draft so it can be published to the Marketplace by hand;
 # publishing it moves the v0 / v0.x tags (sync-release-tags.yml).
 release:

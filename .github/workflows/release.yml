@@ -31,6 +31,9 @@ jobs:
           go-version: "stable"
           cache: false
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
       - name: Install go-licenses
         run: go install github.com/google/go-licenses/v2@v2.0.1
 
@@ -49,3 +52,4 @@ jobs:
             dist/*.tar.gz
             dist/*.zip
             dist/checksums.txt
+            dist/checksums.txt.sigstore.json

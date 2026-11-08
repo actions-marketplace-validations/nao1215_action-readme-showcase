@@ -12,4 +12,4 @@ Only the latest release gets security fixes. Reference the action at `@v0` to pi
 
 The star history graph needs a personal access token. It only reads public data, so create a fine-grained token with "Public repositories" access and no permissions. The action sends the token only to the GitHub API (`GITHUB_API_URL` and `GITHUB_GRAPHQL_URL`) and never writes it to a file or to the log.
 
-The binary the action runs is downloaded from this repository's release and checked against the release's `checksums.txt`. Each release also carries a build provenance attestation, which you can check with `gh attestation verify <archive> --repo nao1215/action-readme-showcase`.
+The binary the action runs is downloaded from this repository's release and checked against the release's `checksums.txt`. Each release also carries a cosign signature of `checksums.txt` (`checksums.txt.sigstore.json`) and a build provenance attestation, which you can check with `gh attestation verify <archive> --repo nao1215/action-readme-showcase`.

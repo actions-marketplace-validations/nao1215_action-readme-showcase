@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -357,6 +358,28 @@ func TestNiceScale(t *testing.T) {
 		step, top := niceScale(in)
 		if step != want[0] || top != want[1] {
 			t.Errorf("niceScale(%d) = %d, %d; want %v", in, step, top, want)
+		}
+	}
+}
+
+// Every image the README shows must exist, in both themes.
+func TestReadmeImagesExist(t *testing.T) {
+	t.Parallel()
+
+	doc, err := os.ReadFile("README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	refs := regexp.MustCompile(`(?:src|srcset)="([^"]+\.svg)"`).FindAllStringSubmatch(string(doc), -1)
+	if len(refs) == 0 {
+		t.Fatal("README shows no images")
+	}
+	for _, m := range refs {
+		if strings.Contains(m[1], "://") {
+			continue
+		}
+		if _, err := os.Stat(filepath.FromSlash(m[1])); err != nil {
+			t.Errorf("README shows %s: %v", m[1], err)
 		}
 	}
 }

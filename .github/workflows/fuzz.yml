@@ -1,0 +1,35 @@
+name: Fuzz
+
+# The unit tests run each target's seed corpus on every push. This runs real
+# mutation fuzzing on a schedule. A crasher fails the run and its input is
+# printed in the log; it never blocks a pull request.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    name: fuzz (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [FuzzRenderCard, FuzzReplaceBetweenMarkers, FuzzParseConfig, FuzzWrapText]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "stable"
+
+      - name: Fuzz
+        env:
+          TARGET: ${{ matrix.target }}
+        run: go test -run='^$' -fuzz="^${TARGET}$" -fuzztime=3m .

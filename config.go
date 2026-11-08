@@ -72,17 +72,25 @@ func loadConfig(path, defaultOwner string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	cfg, err := parseConfig(data, defaultOwner)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", path, err)
+	}
+	return cfg, nil
+}
+
+func parseConfig(data []byte, defaultOwner string) (*Config, error) {
 	var cfg Config
 	dec := yaml.NewDecoder(bytes.NewReader(data))
 	dec.KnownFields(true)
 	if err := dec.Decode(&cfg); err != nil {
-		return nil, fmt.Errorf("parse %s: %w", path, err)
+		return nil, fmt.Errorf("parse: %w", err)
 	}
 	if cfg.Owner == "" {
 		cfg.Owner = defaultOwner
 	}
 	if err := cfg.validate(); err != nil {
-		return nil, fmt.Errorf("%s: %w", path, err)
+		return nil, err
 	}
 	return &cfg, nil
 }
