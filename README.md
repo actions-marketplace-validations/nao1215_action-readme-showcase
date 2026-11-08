@@ -17,6 +17,25 @@ It needs nothing but GitHub and GitHub Actions. The action reads the GitHub API,
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="doc/img/star-history-dark.svg"><img src="doc/img/star-history-light.svg" width="808" alt="Star history"></picture>
 
+```mermaid
+sequenceDiagram
+    box Your repository
+        participant C as readme-showcase.yml
+        participant R as README and cards/
+    end
+    box GitHub
+        participant W as GitHub Actions
+        participant A as action-readme-showcase
+        participant G as GitHub API
+    end
+
+    W->>A: Run with configuration
+    A->>G: Fetch repository metadata
+    G-->>A: Description, language, and star count
+    A->>R: Update SVG cards and README
+    W->>R: Commit and push if changed
+```
+
 ## Usage
 
 Put two markers in your README. Everything between them is replaced on each run; the rest of the file is left alone.
