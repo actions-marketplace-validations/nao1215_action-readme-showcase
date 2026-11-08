@@ -1,0 +1,9 @@
+# Cards only, so the default token is enough. Used by the Action workflow.
+owner: nao1215
+sections:
+  - groups:
+      - title: Tools
+        repos:
+          - name: gup
+            featured: true
+          - name: golang/go

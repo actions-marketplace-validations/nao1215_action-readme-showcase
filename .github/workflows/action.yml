@@ -1,0 +1,95 @@
+name: Action
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint scripts and workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run ShellCheck
+        run: shellcheck -x scripts/*.sh
+
+      - name: Run actionlint
+        uses: rhysd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca # v1.7.12
+
+      - name: Test version resolution
+        run: bash scripts/install_test.sh
+
+      - name: Test release tag normalization
+        run: bash scripts/release_meta_test.sh
+
+  # Runs the action from this checkout against the real API with the default
+  # token. uses: ./ has no release ref, so this also covers the build from
+  # source with the Go that the runner image ships.
+  run:
+    name: Run (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate cards
+        id: showcase
+        uses: ./
+        with:
+          config: testdata/cards-only.yml
+          readme: testdata/README.md
+
+      - name: Check the result
+        shell: bash
+        env:
+          CHANGED: ${{ steps.showcase.outputs.changed }}
+          VERSION: ${{ steps.showcase.outputs.version }}
+        run: |
+          set -x
+          test "$VERSION" = source
+          test "$CHANGED" = true
+          test -s testdata/cards/light/nao1215__gup.svg
+          test -s testdata/cards/dark/golang__go.svg
+          grep -q 'cards/light/nao1215__gup.svg' testdata/README.md
+          grep -q 'Kept as is.' testdata/README.md
+
+  # The default token cannot list stargazers. The action has to fail and say
+  # what to do instead of drawing an empty graph.
+  star-history-default-token:
+    name: Star history with the default token fails clearly
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate cards and the graph
+        id: showcase
+        continue-on-error: true
+        uses: ./
+        with:
+          config: testdata/readme-showcase.yml
+          readme: testdata/README.md
+
+      - name: Check that it failed
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.showcase.outcome }}
+        run: test "$OUTCOME" = failure

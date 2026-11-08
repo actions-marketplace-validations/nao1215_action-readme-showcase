@@ -1,0 +1,43 @@
+version: 2
+project_name: readme-showcase
+before:
+  hooks:
+    - go mod tidy
+    - sh -c 'GOROOT="$(go env GOROOT)" CGO_ENABLED=0 go-licenses save . --save_path=third_party_licenses --force'
+builds:
+  - main: .
+    binary: readme-showcase
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version=v{{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+archives:
+  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+      - CHANGELOG.md
+      - src: "third_party_licenses/**/*"
+        dst: THIRD_PARTY_LICENSES
+checksum:
+  name_template: "checksums.txt"
+# The release stays a draft so it can be published to the Marketplace by hand;
+# publishing it moves the v0 / v0.x tags (sync-release-tags.yml).
+release:
+  draft: true
+  mode: keep-existing
+changelog:
+  disable: true

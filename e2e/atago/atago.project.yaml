@@ -1,0 +1,8 @@
+# The binary under test is built from this checkout once per run and put first
+# on PATH, so every spec here exercises the code in the working tree.
+subject:
+  name: readme-showcase
+  artifact: bin/readme-showcase
+  build:
+    command: "go build -o ${artifact} ."
+    cwd: "../.."

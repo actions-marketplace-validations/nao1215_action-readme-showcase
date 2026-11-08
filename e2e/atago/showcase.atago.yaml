@@ -1,0 +1,273 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nao1215/atago/main/schema/atago.schema.json
+version: "1"
+
+# readme-showcase against a stub GitHub API. GITHUB_API_URL and
+# GITHUB_GRAPHQL_URL are the variables GitHub Actions sets, so pointing them
+# at the mock is all it takes to run offline.
+#
+# Run with: make e2e
+
+suite:
+  name: readme-showcase
+
+scenarios:
+  - name: cards are drawn and the README is rewritten between the markers
+    mock_servers:
+      - &github
+        name: api
+        routes:
+          - method: POST
+            path: /graphql
+            json:
+              data:
+                r0:
+                  name: tool
+                  owner: { login: me }
+                  description: A tool.
+                  stargazerCount: 3
+                  forkCount: 1
+                  isArchived: false
+                  primaryLanguage: { name: Go, color: "#00ADD8" }
+                  latestRelease: { tagName: v1.2.3 }
+                r1:
+                  name: lib
+                  owner: { login: other }
+                  description: Someone else's library.
+                  stargazerCount: 1200
+                  forkCount: 0
+                  isArchived: false
+                  primaryLanguage: null
+                  latestRelease: null
+          - method: GET
+            path: /repos/me/tool/stargazers
+            json:
+              - starred_at: "2024-01-02T03:04:05Z"
+              - starred_at: "2024-06-01T00:00:00Z"
+              - starred_at: "2025-02-03T00:00:00Z"
+    env: &env
+      GITHUB_API_URL: ${api.url}
+      GITHUB_GRAPHQL_URL: ${api.url}/graphql
+      GITHUB_TOKEN: test-token
+      GITHUB_OUTPUT: ""
+    steps:
+      - &readme
+        fixture:
+          file: README.md
+          content: |
+            # Hello
+
+            <!-- showcase:start -->
+            old text
+            <!-- showcase:end -->
+
+            Thanks for reading.
+      - fixture:
+          file: showcase.yml
+          content: |
+            owner: me
+            sections:
+              - groups:
+                  - title: Mine
+                    repos:
+                      - name: tool
+                        featured: true
+                      - name: other/lib
+                        description: Overridden description.
+      - run:
+          command: readme-showcase -config showcase.yml
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "2 cards, changed=true"
+      - assert:
+          file:
+            path: README.md
+            contains: "# Hello"
+      - assert:
+          file:
+            path: README.md
+            contains: "Thanks for reading."
+      - assert:
+          file:
+            path: README.md
+            contains: '<img src="cards/light/me__tool.svg" width="400" alt="me/tool">'
+      - assert:
+          file:
+            path: README.md
+            not_contains: "old text"
+      - assert:
+          file:
+            path: README.md
+            not_contains: "star-history"
+      - assert:
+          file:
+            path: cards/light/me__tool.svg
+            contains: featured
+      - assert:
+          file:
+            path: cards/dark/other__lib.svg
+            contains: Overridden description.
+      - assert:
+          file:
+            path: cards/dark/other__lib.svg
+            contains: ">1.2k<"
+      - assert:
+          mock:
+            name: api
+            path: /graphql
+            method: POST
+            count: 1
+            header: { name: Authorization, equals: "Bearer test-token" }
+      # Nothing changed upstream, so a second run leaves every file alone.
+      - run:
+          command: readme-showcase -config showcase.yml
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "changed=false"
+
+  - name: the star history graph draws featured repositories over minStars
+    mock_servers:
+      - *github
+    env: *env
+    steps:
+      - *readme
+      - fixture:
+          file: showcase.yml
+          content: |
+            owner: me
+            starHistory:
+              minStars: 2
+            sections:
+              - groups:
+                  - title: Mine
+                    repos:
+                      - name: tool
+                        featured: true
+                      - name: other/lib
+      - run:
+          command: readme-showcase -config showcase.yml
+      - assert:
+          exit_code: 0
+      - assert:
+          file:
+            path: cards/star-history-light.svg
+            contains: "Star history: tool 3"
+      - assert:
+          file:
+            path: README.md
+            contains: 'srcset="cards/star-history-dark.svg"'
+      # other/lib has 1.2k stars but is not featured, so it is not fetched.
+      - assert:
+          mock:
+            name: api
+            path: /repos/other/lib/stargazers
+            count: 0
+
+  - name: the Actions token is refused and the error says what to do
+    mock_servers:
+      - name: api
+        routes:
+          - method: POST
+            path: /graphql
+            json:
+              data:
+                r0:
+                  name: tool
+                  owner: { login: me }
+                  description: ""
+                  stargazerCount: 3
+                  forkCount: 0
+                  isArchived: false
+          - method: GET
+            path: /repos/me/tool/stargazers
+            status: 403
+            json: { message: Resource not accessible by integration }
+    env: *env
+    steps:
+      - *readme
+      - fixture:
+          file: showcase.yml
+          content: |
+            owner: me
+            starHistory:
+              minStars: 0
+            sections:
+              - groups:
+                  - title: Mine
+                    repos:
+                      - name: tool
+                        featured: true
+      - run:
+          command: readme-showcase -config showcase.yml
+      - assert:
+          exit_code: 1
+          stderr:
+            contains: "needs a personal access token"
+
+  - name: a misspelled config key is an error, not ignored
+    env:
+      GITHUB_TOKEN: test-token
+    steps:
+      - *readme
+      - fixture:
+          file: showcase.yml
+          content: |
+            owner: me
+            sections:
+              - groups:
+                  - title: Mine
+                    repos:
+                      - name: tool
+                        featurd: true
+      - run:
+          command: readme-showcase -config showcase.yml
+      - assert:
+          exit_code: 1
+          stderr:
+            contains: "field featurd not found"
+
+  - name: a README without markers is reported
+    mock_servers:
+      - *github
+    env: *env
+    steps:
+      - fixture:
+          file: README.md
+          content: "# Hello\n"
+      - fixture:
+          file: showcase.yml
+          content: |
+            owner: me
+            sections:
+              - groups:
+                  - title: Mine
+                    repos:
+                      - name: tool
+      - run:
+          command: readme-showcase -config showcase.yml
+      - assert:
+          exit_code: 1
+          stderr:
+            contains: "README has no showcase markers"
+
+  - name: no token is an error
+    env:
+      GITHUB_TOKEN: ""
+      GH_TOKEN: ""
+    steps:
+      - run:
+          command: readme-showcase
+      - assert:
+          exit_code: 1
+          stderr:
+            contains: "set GITHUB_TOKEN or GH_TOKEN"
+
+  - name: version is printed
+    steps:
+      - run:
+          command: readme-showcase -version
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: '^\S+\n$'

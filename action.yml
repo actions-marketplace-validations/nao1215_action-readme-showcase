@@ -1,0 +1,60 @@
+name: "README Showcase Cards"
+description: "Draw repository cards and a star history graph as SVG, and list them in your README between two markers."
+author: "CHIKAMATSU Naohiro"
+
+branding:
+  icon: "star"
+  color: "yellow"
+
+inputs:
+  token:
+    description: "Token for the GitHub API. The default token draws the cards; the star history graph needs a personal access token (see README)."
+    required: false
+    default: ${{ github.token }}
+  config:
+    description: "Config file listing the repositories to show."
+    required: false
+    default: ".github/readme-showcase.yml"
+  readme:
+    description: "README to rewrite between <!-- showcase:start --> and <!-- showcase:end -->."
+    required: false
+    default: "README.md"
+  cards-dir:
+    description: "Directory for the generated SVG files, relative to the README."
+    required: false
+    default: "cards"
+  version:
+    description: 'readme-showcase release to run ("latest", "v0.1.0"). Empty means the release this action was referenced at.'
+    required: false
+    default: ""
+
+outputs:
+  changed:
+    description: '"true" when a card, the graph, or the README changed.'
+    value: ${{ steps.run.outputs.changed }}
+  version:
+    description: 'The readme-showcase release that ran, or "source" when it was built from the action source.'
+    value: ${{ steps.install.outputs.version }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: install
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_GITHUB_TOKEN: ${{ github.token }}
+        ACTION_REF: ${{ github.action_ref }}
+        RUNNER_OS: ${{ runner.os }}
+        RUNNER_ARCH: ${{ runner.arch }}
+      run: bash "${GITHUB_ACTION_PATH}/scripts/install.sh"
+
+    - id: run
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        BIN: ${{ steps.install.outputs.bin-path }}
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_README: ${{ inputs.readme }}
+        INPUT_CARDS_DIR: ${{ inputs.cards-dir }}
+      run: '"$BIN" -config "$INPUT_CONFIG" -readme "$INPUT_README" -cards "$INPUT_CARDS_DIR"'

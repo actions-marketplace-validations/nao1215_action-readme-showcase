@@ -1,0 +1,19 @@
+# Used by the tests and by the integration job in CI.
+owner: nao1215
+starHistory:
+  minStars: 100
+sections:
+  - groups:
+      - title: Go CLI tools
+        repos:
+          - name: gup
+            featured: true
+            description: Update binaries installed with `go install` in parallel.
+          - name: sqly
+            featured: true
+  - summary: More
+    groups:
+      - title: Libraries
+        repos:
+          - name: markdown
+          - name: golang/go
