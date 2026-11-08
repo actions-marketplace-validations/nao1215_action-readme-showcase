@@ -69,10 +69,10 @@ jobs:
           grep -q 'cards/light/nao1215__gup.svg' testdata/README.md
           grep -q 'Kept as is.' testdata/README.md
 
-  # The default token cannot list stargazers. The action has to fail and say
-  # what to do instead of drawing an empty graph.
+  # Aggregate history for public repositories works with the default token.
+  # Check the actual SVG output, not just the action's exit status.
   star-history-default-token:
-    name: Star history with the default token fails clearly
+    name: Star history with the default token
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -82,14 +82,20 @@ jobs:
 
       - name: Generate cards and the graph
         id: showcase
-        continue-on-error: true
         uses: ./
         with:
           config: testdata/readme-showcase.yml
           readme: testdata/README.md
 
-      - name: Check that it failed
+      - name: Check the graph and README
         shell: bash
         env:
-          OUTCOME: ${{ steps.showcase.outcome }}
-        run: test "$OUTCOME" = failure
+          CHANGED: ${{ steps.showcase.outputs.changed }}
+        run: |
+          test "$CHANGED" = true
+          test -s testdata/cards/star-history-light.svg
+          test -s testdata/cards/star-history-dark.svg
+          grep -q 'Star history: gup' testdata/cards/star-history-light.svg
+          grep -q 'sqly' testdata/cards/star-history-dark.svg
+          grep -q 'cards/star-history-dark.svg' testdata/README.md
+          grep -q 'Kept as is.' testdata/README.md

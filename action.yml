@@ -8,7 +8,7 @@ branding:
 
 inputs:
   token:
-    description: "Token for the GitHub API. The token must have read access to the graph repositories; use a personal access token for cross-repository star history (see README)."
+    description: "Token for the GitHub API. The default works for public cards and star history. See README to configure an optional personal access token."
     required: false
     default: ${{ github.token }}
   config:

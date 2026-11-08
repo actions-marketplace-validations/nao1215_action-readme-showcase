@@ -124,18 +124,25 @@ sections:
 
 When upgrading from v0.1.0, add `starHistory.repos` explicitly. The graph no longer selects repositories through `featured`.
 
-The graph uses GitHub's [aggregate star history API](https://docs.github.com/en/rest/activity/starring#get-repository-star-history), which provides daily counts and requires Metadata read access. It does not read individual stargazers. Pass a token with read access to the selected repositories; no Contents write permission is needed.
+The graph uses GitHub's [aggregate star history API](https://docs.github.com/en/rest/activity/starring#get-repository-star-history), which provides daily counts with Metadata read access. It does not read individual stargazers.
+
+### Token setup
+
+For public repositories, the default `${{ github.token }}` works with the aggregate history API. Use the workflow in Usage; no extra secret is required. Do not add `with.token` with a missing secret, because an empty input overrides the default token.
+
+If you want to use a fine-grained personal access token, follow these steps. This example graphs `gup`, `sqly`, `filesql`, and `markdown` owned by `nao1215`.
 
 1. Open [Settings > Developer settings > Fine-grained tokens](https://github.com/settings/personal-access-tokens/new).
-2. Set Resource owner to the account that owns the graph repositories. Under Repository access, select those repositories and keep Metadata read access. No user permissions are needed.
-3. Pick an expiration and generate the token.
-4. In the repository that runs the workflow, add it under Settings > Secrets and variables > Actions as `STARS_TOKEN`, or from the shell:
+2. Give the token a name and choose an expiration date. Set Resource owner to `nao1215` (use your account for your own repositories).
+3. Under Repository access, choose Only select repositories and select all four graph repositories. Selecting only the profile repository, `nao1215/nao1215`, is insufficient.
+4. Under Repository permissions, keep Metadata: Read-only, which GitHub normally adds automatically. No Contents write permission or User permissions are needed for this graph.
+5. Generate the token and copy its value. In the repository running the workflow (`nao1215/nao1215` in this example), open Settings > Secrets and variables > Actions > New repository secret. Use `STARS_TOKEN` as the name and paste the token as its value. Alternatively, run this command and paste the token at the prompt:
 
    ```shell
-   gh secret set STARS_TOKEN
+   gh secret set STARS_TOKEN --repo nao1215/nao1215
    ```
 
-5. Pass it to the action:
+6. Pass the secret to the action in the workflow:
 
    ```yaml
    - id: showcase
@@ -144,9 +151,22 @@ The graph uses GitHub's [aggregate star history API](https://docs.github.com/en/
        token: ${{ secrets.STARS_TOKEN }}
    ```
 
-The token is used only for reading from the GitHub API. The push in the last step still uses the token from `actions/checkout`. When the token expires, the run fails, and you replace the secret.
+When using a PAT, the two repository selections are separate: `starHistory.repos` chooses what to draw; the PAT's Repository access permits those API reads. Update both when adding a graph repository.
 
-Each run makes one GraphQL request for the cards and one REST request per 100 stars of each repository in the graph.
+The PAT only reads data. Committing the generated files uses the workflow's `permissions: contents: write` and the credentials from `actions/checkout`; it does not need write access on the PAT.
+
+After replacing an expired or regenerated token, update the `STARS_TOKEN` secret in the workflow repository and rerun the failed job. Editing permissions on an existing PAT keeps the same token value.
+
+### If token setup fails
+
+| Symptom | Check |
+| --- | --- |
+| `set GITHUB_TOKEN or GH_TOKEN` in Actions | `STARS_TOKEN` is nonempty, is a repository secret in the workflow repository, and is passed through `with.token`. |
+| HTTP 401 or an access error after expiration | Replace the expired or revoked PAT and update the secret. |
+| HTTP 403 from `/stargazers/history` | Check the PAT's resource owner, selected graph repositories, Metadata read permission, and any organization approval requirement. |
+| HTTP 403 from `/stargazers` on v0.1.0 | Upgrade to v0.2.0 or later. v0.1.0 uses the restricted individual-stargazer API; adding write permissions is unnecessary with the aggregate API. |
+
+Each run makes one GraphQL request for repository metadata and paginated REST requests for the graph, with up to 30 weeks per page.
 
 ## Config
 
@@ -168,7 +188,7 @@ Cards come two to a row in the order you list them. A misspelled key is an error
 
 | Name | Default | Description |
 | --- | --- | --- |
-| `token` | `${{ github.token }}` | Token for the GitHub API. Needs to be a personal access token for the star history graph. |
+| `token` | `${{ github.token }}` | Works for public cards and graphs. See Token setup to supply an optional PAT. |
 | `config` | `.github/readme-showcase.yml` | Config file. |
 | `readme` | `README.md` | README to rewrite. |
 | `cards-dir` | `cards` | Where the SVG files go, relative to the README. |
