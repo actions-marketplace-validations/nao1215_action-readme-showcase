@@ -108,6 +108,7 @@ func runIn(dir string, extra ...string) (string, error) {
 
 const twoRepoConfig = `
 starHistory:
+  repos: [big, small]
   minStars: 150
 sections:
   - groups:
@@ -119,6 +120,51 @@ sections:
             featured: true
           - name: other/plain
 `
+
+func TestRunSelectsStarHistoryIndependently(t *testing.T) {
+	config := `
+starHistory:
+  repos: [other/graph-only, plain, small]
+  minStars: 10
+sections:
+  - groups:
+      - title: Tools
+        repos:
+          - name: featured
+            featured: true
+          - name: plain
+          - name: small
+`
+	fake := &fakeGitHub{stars: map[string]int{"me/featured": 200, "me/plain": 10, "me/small": 9, "other/graph-only": 20}}
+	dir := setupRun(t, config, fake)
+	if out, err := runIn(dir); err != nil {
+		t.Fatalf("run: %v\n%s", err, out)
+	}
+	graph, err := os.ReadFile(filepath.Join(dir, "cards", "star-history-light.svg"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	svg := string(graph)
+	if !strings.Contains(svg, "other/graph-only 20") || !strings.Contains(svg, "plain 10") || strings.Contains(svg, "featured") || strings.Contains(svg, "small") {
+		t.Fatalf("graph does not follow the explicit selection: %s", svg)
+	}
+	if strings.Index(svg, "other/graph-only 20") > strings.Index(svg, "plain 10") {
+		t.Error("graph does not preserve the configured order")
+	}
+	if fake.starRequests != 2 {
+		t.Errorf("stargazer requests = %d, want 2", fake.starRequests)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "cards", "light", "other__graph-only.svg")); !os.IsNotExist(err) {
+		t.Errorf("graph-only repository unexpectedly produced a card: %v", err)
+	}
+	readme, err := os.ReadFile(filepath.Join(dir, "README.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(readme), "other/graph-only") || !strings.Contains(string(readme), `alt="me/featured"`) {
+		t.Errorf("graph selection changed the README cards: %s", readme)
+	}
+}
 
 func TestRunWritesCardsGraphAndReadme(t *testing.T) {
 	fake := &fakeGitHub{stars: map[string]int{"me/big": 250, "me/small": 3, "other/plain": 7}}

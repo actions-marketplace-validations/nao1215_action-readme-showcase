@@ -77,7 +77,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 	client := &http.Client{Timeout: 30 * time.Second}
-	infos, err := fetchRepos(ctx, client, token, cfg.Repos(), cfg.Owner)
+	infos, err := fetchRepos(ctx, client, token, cfg.reposToFetch(), cfg.Owner)
 	if err != nil {
 		return err
 	}

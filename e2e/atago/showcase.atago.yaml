@@ -161,7 +161,7 @@ scenarios:
             path: .github/showcase/light/logo.svg
             equals: "<svg/>"
 
-  - name: the star history graph draws featured repositories over minStars
+  - name: the star history graph draws explicitly selected repositories over minStars
     mock_servers:
       - *github
     env: *env
@@ -172,14 +172,15 @@ scenarios:
           content: |
             owner: me
             starHistory:
+              repos: [tool]
               minStars: 2
             sections:
               - groups:
                   - title: Mine
                     repos:
                       - name: tool
-                        featured: true
                       - name: other/lib
+                        featured: true
       - run:
           command: readme-showcase -config showcase.yml
       - assert:
@@ -192,7 +193,7 @@ scenarios:
           file:
             path: README.md
             contains: 'srcset="cards/star-history-dark.svg"'
-      # other/lib has 1.2k stars but is not featured, so it is not fetched.
+      # other/lib has 1.2k stars but is not selected, so it is not fetched.
       - assert:
           mock:
             name: api
@@ -226,6 +227,7 @@ scenarios:
           content: |
             owner: me
             starHistory:
+              repos: [tool]
               minStars: 0
             sections:
               - groups:

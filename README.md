@@ -112,14 +112,17 @@ The action deletes a card when its repository leaves the config. It only touches
 
 ## Star history
 
-Add `starHistory` to the config to draw how stars accumulated over time. It draws one line per featured repository that has at least `minStars` stars, six lines at most.
+List the repositories in `starHistory.repos` to draw their star history, independently of card highlighting. Names use `owner` by default; `owner/repo` also works. Repositories do not need a card. The graph follows the list order and shows up to six repositories meeting `minStars` (default: 0).
 
 ```yaml
 starHistory:
+  repos: [gup, sqly, other-owner/project]
   minStars: 100
 sections:
   ...
 ```
+
+When upgrading from v0.1.0, add `starHistory.repos` explicitly. The graph no longer selects repositories through `featured`.
 
 The graph needs a personal access token. The token GitHub Actions provides can read star counts, which is all the cards need, but GitHub refuses it when listing who starred a repository and when. Without an extra token the action stops with an error that says so.
 
@@ -150,7 +153,8 @@ Each run makes one GraphQL request for the cards and one REST request per 100 st
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `owner` | owner of the repository running the workflow | Owner for names written without `owner/`. |
-| `starHistory.minStars` | no graph | Featured repositories with at least this many stars get a line in the graph. |
+| `starHistory.repos` | required with `starHistory` | Repository names in graph order, independent of cards and `featured`. |
+| `starHistory.minStars` | `0` | Minimum star count for a selected repository to appear. |
 | `sections[].summary` | none | Folds the section into `<details>` with this summary. |
 | `sections[].groups[].title` | required | Heading above the cards. |
 | `repos[].name` | required | `repo` or `owner/repo`. |

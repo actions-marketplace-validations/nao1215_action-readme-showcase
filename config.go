@@ -21,9 +21,11 @@ type Config struct {
 	Sections    []Section    `yaml:"sections"`
 }
 
-// StarHistory chooses which featured repositories get a line in the graph.
+// StarHistory selects graph repositories independently of the cards.
 type StarHistory struct {
-	// MinStars is how many stars a featured repository needs to be drawn.
+	// Repos lists names or owner/name pairs in graph order.
+	Repos []string `yaml:"repos"`
+	// MinStars is how many stars a selected repository needs to be drawn.
 	MinStars int `yaml:"minStars"`
 }
 
@@ -102,6 +104,24 @@ func (c *Config) validate() error {
 	if c.StarHistory != nil && c.StarHistory.MinStars < 0 {
 		return errors.New("starHistory.minStars is negative")
 	}
+	if c.StarHistory != nil {
+		if len(c.StarHistory.Repos) == 0 {
+			return errors.New("starHistory.repos is empty; list graph repositories explicitly")
+		}
+		seen := map[string]bool{}
+		for _, name := range c.StarHistory.Repos {
+			r := RepoSpec{Name: name}
+			owner, repo := r.OwnerAndName(c.Owner)
+			if strings.TrimSpace(owner) == "" || strings.TrimSpace(repo) == "" || strings.Contains(repo, "/") {
+				return fmt.Errorf("invalid starHistory repository name %q", name)
+			}
+			key := strings.ToLower(owner + "/" + repo)
+			if seen[key] {
+				return fmt.Errorf("starHistory repository %q is listed twice", name)
+			}
+			seen[key] = true
+		}
+	}
 	if len(c.Repos()) == 0 {
 		return errors.New("no repositories are listed")
 	}
@@ -139,6 +159,24 @@ func (c *Config) Repos() []RepoSpec {
 		}
 	}
 	return out
+}
+
+// reposToFetch includes graph-only repositories without adding cards for them.
+func (c *Config) reposToFetch() []RepoSpec {
+	repos := c.Repos()
+	seen := make(map[string]bool, len(repos))
+	for _, r := range repos {
+		seen[r.Name] = true
+	}
+	if c.StarHistory != nil {
+		for _, name := range c.StarHistory.Repos {
+			if !seen[name] {
+				repos = append(repos, RepoSpec{Name: name})
+				seen[name] = true
+			}
+		}
+	}
+	return repos
 }
 
 func isHexColor(s string) bool {

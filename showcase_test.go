@@ -216,6 +216,25 @@ func TestConfigValidate(t *testing.T) {
 	}
 }
 
+func TestStarHistoryRequiresExplicitUniqueRepositories(t *testing.T) {
+	t.Parallel()
+	for _, history := range []string{
+		"minStars: 100",
+		"repos: []",
+		"repos: ['']",
+		"repos: ['   ']",
+		"repos: [/tool]",
+		"repos: [owner/]",
+		"repos: [owner/repo/extra]",
+		"repos: [tool, ME/TOOL]",
+	} {
+		data := "owner: me\nstarHistory: {" + history + "}\nsections:\n  - groups:\n      - title: Tools\n        repos:\n          - name: tool\n            featured: true\n"
+		if _, err := parseConfig([]byte(data), ""); err == nil {
+			t.Errorf("accepted starHistory {%s}", history)
+		}
+	}
+}
+
 func TestLoadConfig(t *testing.T) {
 	t.Parallel()
 
@@ -230,6 +249,7 @@ func TestLoadConfig(t *testing.T) {
 
 	cfg, err := loadConfig(write("ok.yml", `
 starHistory:
+  repos: [gup, other/tool]
   minStars: 10
 sections:
   - summary: Folded
