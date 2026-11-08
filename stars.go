@@ -12,16 +12,16 @@ import (
 	"time"
 )
 
-// fetchStarSeries returns, for each featured repository with at least
-// cfg.StarHistory.MinStars stars, in config order,
+// fetchStarSeries returns, for each explicitly selected repository with at least
+// cfg.StarHistory.MinStars stars, in graph configuration order,
 // when each of its stars was given, oldest first. Stars of users who later
 // deleted their account are gone from the API, so a line can end a little
 // below the count on the card.
 func fetchStarSeries(ctx context.Context, client *http.Client, token string, cfg *Config, infos map[string]RepoInfo) ([]StarSeries, error) {
 	var out []StarSeries
-	for _, r := range cfg.Repos() {
-		info := infos[r.Name]
-		if !r.Featured || info.Stars < cfg.StarHistory.MinStars {
+	for _, selected := range cfg.StarHistory.Repos {
+		info := infos[selected]
+		if info.Stars < cfg.StarHistory.MinStars {
 			continue
 		}
 		dates, err := fetchRepoStarDates(ctx, client, token, info.Owner, info.Name)

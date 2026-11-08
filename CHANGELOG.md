@@ -6,6 +6,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Star history now requires `starHistory.repos`, independent of card highlighting. Add an explicit list when upgrading from v0.1.0; graph-only repositories are supported.
+
 ## [0.1.0] - 2026-11-08
 
 ### Added

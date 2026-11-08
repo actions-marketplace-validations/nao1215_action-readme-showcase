@@ -1,6 +1,7 @@
 # Used by the tests and by the integration job in CI.
 owner: nao1215
 starHistory:
+  repos: [gup, sqly]
   minStars: 100
 sections:
   - groups:
