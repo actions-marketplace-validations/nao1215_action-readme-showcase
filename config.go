@@ -70,7 +70,7 @@ func (r RepoSpec) OwnerAndName(defaultOwner string) (string, string) {
 // loadConfig reads a YAML (or JSON) config. defaultOwner fills in Owner when
 // the file leaves it out.
 func loadConfig(path, defaultOwner string) (*Config, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- path is the config file named in the action input
 	if err != nil {
 		return nil, err
 	}

@@ -144,10 +144,10 @@ type writer struct {
 }
 
 func (w *writer) write(path string, data []byte) error {
-	if old, err := os.ReadFile(path); err == nil && string(old) == string(data) {
+	if old, err := os.ReadFile(path); err == nil && string(old) == string(data) { // #nosec G304 -- path is a card or README the action itself writes in the workspace
 		return nil
 	}
-	if err := os.WriteFile(path, data, 0o644); err != nil {
+	if err := os.WriteFile(path, data, 0o644); err != nil { // #nosec G306 G703 -- cards and the README are committed files, so they get the usual 0644
 		return err
 	}
 	w.changed = true
@@ -172,7 +172,7 @@ func (w *writer) remove(path string) error {
 func writeCards(w *writer, cfg *Config, infos map[string]RepoInfo, outDir string) error {
 	for _, t := range themes {
 		dir := filepath.Join(outDir, t.Name)
-		if err := os.MkdirAll(dir, 0o755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil { // #nosec G301 -- the card directory is committed to the repository, so it gets the usual 0755
 			return err
 		}
 		keep := map[string]bool{}
@@ -216,7 +216,7 @@ func setOutput(name, value string) error {
 	if path == "" {
 		return nil
 	}
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0o644)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0o644) // #nosec G302 G304 G703 -- path is the GITHUB_OUTPUT file the runner provides
 	if err != nil {
 		return err
 	}
