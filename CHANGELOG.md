@@ -6,6 +6,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-19
+
 ### Added
 
 - `repos[].awesome: owner/repo` names an awesome list, such as `avelino/awesome-go`, and puts an "awesome" badge on the card. The action reads the list's README on every run and draws the badge only while it links to the repository; an unlinked repository gets a warning and no badge, and an unreadable list fails the run. The card's accessible title says which list it is in.
