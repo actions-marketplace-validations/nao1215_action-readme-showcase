@@ -9,6 +9,7 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - CI scans the repository with gosec and Trivy on every pull request (Trivy covers dependency vulnerabilities, committed secrets and misconfigurations, and also runs daily). Workflow actions are recorded in `.github/workflows/actions.lock`, which CI verifies against the pinned commits.
+- CI scans the commits of pull requests and of pushes to main for committed secrets with gitleaks (Dependabot pull requests are skipped: their read-only token cannot list the commits), and checks that every module linked into the released binary has an allowed license with go-licenses. The end-to-end tests run on atago v0.26.3 (setup-atago v0.1.5), govulncheck is v1.10.0, releases are built with GoReleaser v2.20.2 and signed with cosign-installer v4.1.3, and CodeQL is v4.39.3. A new push to a pull request cancels the run it supersedes.
 
 ## [0.3.0] - 2026-11-09
 

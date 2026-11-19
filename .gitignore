@@ -7,3 +7,4 @@ cover.html
 /.atago/
 /action-readme-showcase
 /.coverage/
+__pycache__/

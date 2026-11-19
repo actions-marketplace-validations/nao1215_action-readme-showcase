@@ -1,11 +1,15 @@
-![Coverage](https://raw.githubusercontent.com/nao1215/octocovs-central-repo/main/badges/nao1215/action-readme-showcase/coverage.svg)
 [![UnitTest](https://github.com/nao1215/action-readme-showcase/actions/workflows/unit_test.yml/badge.svg)](https://github.com/nao1215/action-readme-showcase/actions/workflows/unit_test.yml)
 [![E2E](https://github.com/nao1215/action-readme-showcase/actions/workflows/e2e.yml/badge.svg)](https://github.com/nao1215/action-readme-showcase/actions/workflows/e2e.yml)
 [![Action](https://github.com/nao1215/action-readme-showcase/actions/workflows/action.yml/badge.svg)](https://github.com/nao1215/action-readme-showcase/actions/workflows/action.yml)
-[![Gosec](https://github.com/nao1215/action-readme-showcase/actions/workflows/gosec.yml/badge.svg)](https://github.com/nao1215/action-readme-showcase/actions/workflows/gosec.yml)
+![Coverage](https://raw.githubusercontent.com/nao1215/octocovs-central-repo/main/badges/nao1215/action-readme-showcase/coverage.svg)
+[![Gitleaks](https://github.com/nao1215/action-readme-showcase/actions/workflows/gitleaks.yml/badge.svg)](https://github.com/nao1215/action-readme-showcase/actions/workflows/gitleaks.yml)
 [![Trivy](https://github.com/nao1215/action-readme-showcase/actions/workflows/trivy.yml/badge.svg)](https://github.com/nao1215/action-readme-showcase/actions/workflows/trivy.yml)
+[![govulncheck](https://github.com/nao1215/action-readme-showcase/actions/workflows/govulncheck.yml/badge.svg)](https://github.com/nao1215/action-readme-showcase/actions/workflows/govulncheck.yml)
+[![Gosec](https://github.com/nao1215/action-readme-showcase/actions/workflows/gosec.yml/badge.svg)](https://github.com/nao1215/action-readme-showcase/actions/workflows/gosec.yml)
 [![tested with atago](https://img.shields.io/badge/tested%20with-atago-7c3aed?logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTMuNiA0LjIgMTEuOSAxMmwtOC4zIDcuOC0xLjktMi4yTDcuOSAxMiAxLjcgNi40eiIvPjxyZWN0IGZpbGw9IiNmZmYiIHg9IjEyLjYiIHk9IjE3LjIiIHdpZHRoPSI5LjciIGhlaWdodD0iMi44IiByeD0iMS40Ii8%2BPC9zdmc%2B&logoColor=white)](https://github.com/nao1215/atago)
-![GitHub](https://img.shields.io/github/license/nao1215/action-readme-showcase)
+[![GitHub Marketplace](https://img.shields.io/badge/GitHub%20Marketplace-readme--showcase--cards-blue?logo=github)](https://github.com/marketplace/actions/readme-showcase-cards)
+[![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/nao1215/action-readme-showcase/total)](https://github.com/nao1215/action-readme-showcase/releases)
+[![License](https://img.shields.io/github/license/nao1215/action-readme-showcase)](./LICENSE)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/nao1215/action-readme-showcase/badge)](https://scorecard.dev/viewer/?uri=github.com/nao1215/action-readme-showcase)
 
 # action-readme-showcase
