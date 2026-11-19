@@ -42,7 +42,8 @@ func textWidth(s string, size float64, bold bool) float64 {
 const ellipsis = "…"
 
 // wrapText splits s into at most maxLines lines no wider than maxWidth. When
-// the text does not fit, the last line ends with an ellipsis.
+// the text does not fit, the last line ends with an ellipsis and no other
+// line does.
 func wrapText(s string, size, maxWidth float64, maxLines int) []string {
 	words := strings.Fields(s)
 	if len(words) == 0 || maxLines <= 0 {
@@ -61,6 +62,14 @@ func wrapText(s string, size, maxWidth float64, maxLines int) []string {
 	}
 	lines = append(lines, cur)
 
+	// A word wider than a whole line is cut with an ellipsis, and the ellipsis
+	// says that the text stops there, so that line becomes the last one.
+	for i, l := range lines {
+		if i < len(lines)-1 && textWidth(l, size, false) > maxWidth {
+			lines = append(lines[:i], strings.Join(lines[i:], " "))
+			break
+		}
+	}
 	if len(lines) > maxLines {
 		rest := strings.Join(lines[maxLines-1:], " ")
 		lines = append(lines[:maxLines-1], rest)
