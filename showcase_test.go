@@ -30,6 +30,9 @@ func TestWrapText(t *testing.T) {
 		{name: "two lines", in: strings.Repeat("word ", 18), wantLines: 2},
 		{name: "overflow", in: long, wantLines: 2, wantEllip: true},
 		{name: "one huge word", in: strings.Repeat("x", 200), wantLines: 1, wantEllip: true},
+		// The ellipsis marks where the text stops, so nothing may follow it.
+		{name: "huge word before other words", in: strings.Repeat("x", 200) + " tail", wantLines: 1, wantEllip: true},
+		{name: "huge word on the second line", in: "Short " + strings.Repeat("x", 200) + " tail", wantLines: 2, wantEllip: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
