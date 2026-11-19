@@ -19,7 +19,7 @@ go test -run '^TestGolden_' -update
 `property_test.go` draws inputs with [rapid](https://pkg.go.dev/pgregory.net/rapid), which shrinks a failure to a small input.
 
 - Truncation fits the width and keeps a prefix of the text, and never shows less when given more room; the text width adds up over concatenation.
-- Wrapping keeps the description's words in order, with only the last one shown cut short. This property found the bug fixed in the release after 0.3.0, where a word wider than the card was cut and the next line went on after the ellipsis.
+- Wrapping keeps the description's words in order, with only the last one shown cut short. This property found the bug fixed in 0.3.1, where a word wider than the card was cut and the next line went on after the ellipsis.
 - The compact star count is the exact count below 1,000, within 50 below 10,000, the count's thousands above, and never goes down as the count goes up; `grouped` matches the digits of `strconv.Itoa`.
 - The graph's scale covers the maximum with a 1-2-5 step, and the labels keep their gap inside the plot.
 - Rewriting the README between the markers twice is rewriting it once, and nothing outside the markers changes.

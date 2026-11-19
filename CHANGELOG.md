@@ -6,6 +6,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-19
+
 ### Fixed
 
 - A card's description no longer goes on after an ellipsis. A word wider than the card (a long URL or path) was cut with an ellipsis on the first line and the rest of the description followed on the second; the cut line now ends the description, as the ellipsis says.
