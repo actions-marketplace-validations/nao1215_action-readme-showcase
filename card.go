@@ -29,15 +29,16 @@ type Theme struct {
 	Text     string
 	Muted    string
 	Featured string // border and badge color of featured cards
+	Awesome  string // color of the badge for repositories in an awesome list
 	// Series colors the lines of the star history graph, in config order.
 	// Validated for colorblind separation against Bg as adjacent pairs.
 	Series []string
 }
 
 var themes = []Theme{
-	{Name: "light", Bg: "#ffffff", Border: "#d1d9e0", Title: "#0969da", Text: "#1f2328", Muted: "#59636e", Featured: "#bf8700",
+	{Name: "light", Bg: "#ffffff", Border: "#d1d9e0", Title: "#0969da", Text: "#1f2328", Muted: "#59636e", Featured: "#bf8700", Awesome: "#bf3989",
 		Series: []string{"#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"}},
-	{Name: "dark", Bg: "#151b23", Border: "#3d444d", Title: "#4493f8", Text: "#d1d7e0", Muted: "#9198a1", Featured: "#d29922",
+	{Name: "dark", Bg: "#151b23", Border: "#3d444d", Title: "#4493f8", Text: "#d1d7e0", Muted: "#9198a1", Featured: "#d29922", Awesome: "#db61a2",
 		Series: []string{"#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300"}},
 }
 
@@ -60,9 +61,12 @@ type CardData struct {
 	Forks         int
 	Release       string
 	Featured      bool
+	Awesome       string // owner/repo of an awesome list that links here, or empty
 }
 
-func newCardData(spec RepoSpec, info RepoInfo, defaultOwner string) CardData {
+// newCardData combines the config, what GitHub reports, and the awesome list
+// check. awesome is the list that links to the repository, or empty.
+func newCardData(spec RepoSpec, info RepoInfo, defaultOwner, awesome string) CardData {
 	desc := spec.Description
 	if desc == "" {
 		desc = info.Description
@@ -85,6 +89,7 @@ func newCardData(spec RepoSpec, info RepoInfo, defaultOwner string) CardData {
 		Forks:         info.Forks,
 		Release:       info.LatestRelease,
 		Featured:      spec.Featured,
+		Awesome:       awesome,
 	}
 }
 
@@ -100,7 +105,11 @@ func renderCard(d CardData, t Theme) string {
 
 	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d" role="img" aria-label="%s">`+"\n",
 		cardWidth, cardHeight, cardWidth, cardHeight, esc(d.FullName))
-	fmt.Fprintf(&b, "<title>%s</title>\n", esc(strings.TrimSpace(d.FullName+": "+d.Description)))
+	label := strings.TrimSpace(d.FullName + ": " + d.Description)
+	if d.Awesome != "" {
+		label += " (listed in " + d.Awesome + ")"
+	}
+	fmt.Fprintf(&b, "<title>%s</title>\n", esc(label))
 	fmt.Fprintf(&b, `<style>text{font-family:%s}</style>`+"\n", fontStack)
 
 	border, borderWidth := t.Border, 1.0
@@ -114,19 +123,33 @@ func renderCard(d CardData, t Theme) string {
 	if langColor == "" {
 		langColor = fallbackLanguageColor
 	}
-	// Title row: repository icon, name, and a badge for featured cards.
+	// Title row: repository icon, name, and badges on the right: "featured"
+	// at the edge, "awesome" to its left.
 	b.WriteString(icon(iconRepo, padX, 17, 1, t.Muted))
-	titleMax := float64(cardWidth - padX - padX - 22)
+	type badge struct {
+		text, color string
+		width       int
+	}
+	var badges []badge
 	if d.Featured {
-		titleMax -= 70
+		badges = append(badges, badge{"featured", t.Featured, 62})
+	}
+	if d.Awesome != "" {
+		badges = append(badges, badge{"awesome", t.Awesome, 66})
+	}
+	titleMax := float64(cardWidth - padX - padX - 22)
+	for _, bd := range badges {
+		titleMax -= float64(bd.width + 8)
 	}
 	title := truncateBold(d.Name, titleSize, titleMax)
 	fmt.Fprintf(&b, `<text x="%d" y="30" font-size="%s" font-weight="600" fill="%s">%s</text>`+"\n",
 		padX+22, num(titleSize), t.Title, esc(title))
-	if d.Featured {
-		x := cardWidth - padX - 62
-		fmt.Fprintf(&b, `<rect x="%d" y="16" width="62" height="18" rx="9" fill="none" stroke="%s"/>`+"\n", x, t.Featured)
-		fmt.Fprintf(&b, `<text x="%d" y="29" font-size="11" font-weight="600" text-anchor="middle" fill="%s">featured</text>`+"\n", x+31, t.Featured)
+	right := cardWidth - padX
+	for _, bd := range badges {
+		x := right - bd.width
+		fmt.Fprintf(&b, `<rect x="%d" y="16" width="%d" height="18" rx="9" fill="none" stroke="%s"/>`+"\n", x, bd.width, bd.color)
+		fmt.Fprintf(&b, `<text x="%d" y="29" font-size="11" font-weight="600" text-anchor="middle" fill="%s">%s</text>`+"\n", x+bd.width/2, bd.color, bd.text)
+		right = x - 6
 	}
 
 	// Description, at most two lines.
