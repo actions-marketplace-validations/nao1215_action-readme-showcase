@@ -243,6 +243,19 @@ make coverage   # unit and E2E coverage merged into cover.out
 make lint       # golangci-lint, shellcheck, actionlint
 ```
 
+### Testing
+
+| Technique | Bug class caught here |
+|---|---|
+| Unit and E2E tests ([main_test.go](main_test.go), [e2e/atago/showcase.atago.yaml](e2e/atago/showcase.atago.yaml)) | A run that writes the wrong files, rewrites the README wrongly, or fails without saying why against a stub GitHub API |
+| Golden files ([golden_test.go](golden_test.go)) | A card or star history graph whose SVG changes without anyone deciding it should |
+| Property and metamorphic tests ([property_test.go](property_test.go)) | Text cut wider than the card or out of order, a star count or graph scale that goes the wrong way, a README rewrite that is not idempotent |
+| Differential tests ([property_test.go](property_test.go)) | Thousands separators that disagree with the digits of `strconv.Itoa` |
+| Fuzzing ([fuzz_test.go](fuzz_test.go)) | Malformed SVG, config or README markers that crash or slip through |
+| Mutation testing ([.github/workflows/mutation.yml](.github/workflows/mutation.yml)) | A test that runs a changed comparison or coordinate without noticing the change |
+
+How to run each one is in [doc/testing.md](doc/testing.md).
+
 To release, push a `vX.Y.Z` tag. The Release workflow builds the binaries into a draft release. Open the draft, tick "Publish this Action to the GitHub Marketplace", and publish it; that moves the `v0` and `v0.x` tags to the new release.
 
 ## License

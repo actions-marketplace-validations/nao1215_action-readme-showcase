@@ -8,3 +8,4 @@ cover.html
 /action-readme-showcase
 /.coverage/
 __pycache__/
+testdata/rapid/
