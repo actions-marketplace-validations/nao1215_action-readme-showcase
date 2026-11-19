@@ -82,10 +82,27 @@ func run(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 
+	lists, err := fetchAwesomeLists(ctx, client, token, cfg)
+	if err != nil {
+		return err
+	}
+	awesome := map[string]string{}
+	for _, r := range cfg.Repos() {
+		if r.Awesome == "" {
+			continue
+		}
+		info := infos[r.Name]
+		if listedIn(lists[strings.ToLower(r.Awesome)], info.Owner, info.Name) {
+			awesome[r.Name] = r.Awesome
+		} else {
+			fmt.Fprintf(stderr, "readme-showcase: warning: %s/%s is not linked from %s; the card has no awesome badge\n", info.Owner, info.Name, r.Awesome)
+		}
+	}
+
 	readmeDir := filepath.Dir(*readmePath)
 	outDir := filepath.Join(readmeDir, filepath.FromSlash(*cardsDir))
 	w := &writer{}
-	if err := writeCards(w, cfg, infos, outDir); err != nil {
+	if err := writeCards(w, cfg, infos, awesome, outDir); err != nil {
 		return err
 	}
 
@@ -169,7 +186,7 @@ func (w *writer) remove(path string) error {
 // repositories that are no longer listed. Only files named like a card
 // (owner__name.svg) are removed, so other images that share the directory
 // are left alone.
-func writeCards(w *writer, cfg *Config, infos map[string]RepoInfo, outDir string) error {
+func writeCards(w *writer, cfg *Config, infos map[string]RepoInfo, awesome map[string]string, outDir string) error {
 	for _, t := range themes {
 		dir := filepath.Join(outDir, t.Name)
 		if err := os.MkdirAll(dir, 0o755); err != nil { // #nosec G301 -- the card directory is committed to the repository, so it gets the usual 0755
@@ -180,7 +197,7 @@ func writeCards(w *writer, cfg *Config, infos map[string]RepoInfo, outDir string
 			info := infos[r.Name]
 			file := cardFile(info.Owner, info.Name)
 			keep[file] = true
-			svg := renderCard(newCardData(r, info, cfg.Owner), t)
+			svg := renderCard(newCardData(r, info, cfg.Owner, awesome[r.Name]), t)
 			if err := w.write(filepath.Join(dir, file), []byte(svg)); err != nil {
 				return err
 			}

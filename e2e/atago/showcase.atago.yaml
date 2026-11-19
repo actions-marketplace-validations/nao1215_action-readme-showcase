@@ -60,6 +60,12 @@ scenarios:
               - week: 1704585600
                 total: 3
                 days: [0, 1, 0, 0, 0, 0, 2]
+          # An awesome list that links to me/tool but not to other/lib.
+          - method: GET
+            path: /repos/avelino/awesome-go/readme
+            json:
+              encoding: base64
+              content: LSBbdG9vbF0oaHR0cHM6Ly9naXRodWIuY29tL21lL3Rvb2wpIC0gQSB0b29sLgotIFtsaWItZXh0cmFdKGh0dHBzOi8vZ2l0aHViLmNvbS9vdGhlci9saWItZXh0cmEpCg==
     env: &env
       GITHUB_API_URL: ${api.url}
       GITHUB_GRAPHQL_URL: ${api.url}/graphql
@@ -215,6 +221,49 @@ scenarios:
             name: api
             path: /repos/other/lib/stargazers/history
             count: 0
+
+  - name: the awesome badge appears only on cards the awesome list links to
+    mock_servers:
+      - *github
+    env: *env
+    steps:
+      - *readme
+      - fixture:
+          file: showcase.yml
+          content: |
+            owner: me
+            sections:
+              - groups:
+                  - title: Mine
+                    repos:
+                      - name: tool
+                        awesome: avelino/awesome-go
+                      - name: other/lib
+                        awesome: avelino/awesome-go
+      - run:
+          command: readme-showcase -config showcase.yml
+      - assert:
+          exit_code: 0
+          stderr:
+            contains: "other/lib is not linked from avelino/awesome-go"
+      - assert:
+          file:
+            path: cards/light/me__tool.svg
+            contains: ">awesome</text>"
+      - assert:
+          file:
+            path: cards/dark/me__tool.svg
+            contains: "(listed in avelino/awesome-go)"
+      - assert:
+          file:
+            path: cards/light/other__lib.svg
+            not_contains: ">awesome</text>"
+      # Both cards name the same list, so its README is read once.
+      - assert:
+          mock:
+            name: api
+            path: /repos/avelino/awesome-go/readme
+            count: 1
 
   - name: a token without repository access is refused and the error says what to do
     mock_servers:

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,7 +23,9 @@ type fakeGitHub struct {
 	stars        map[string]int // owner/name -> stars
 	refuseStars  bool           // answer stargazers like the Actions token does
 	starRequests int
-	publicRepos  []string // optional explicit public inventory
+	publicRepos  []string          // optional explicit public inventory
+	readmes      map[string]string // owner/name -> README text of an awesome list
+	readmeHits   int
 }
 
 var aliasRE = regexp.MustCompile(`(r\d+): repository\(owner: "([^"]+)", name: "([^"]+)"\)`)
@@ -33,6 +36,14 @@ func (f *fakeGitHub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch {
+	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/repos/") && strings.HasSuffix(r.URL.Path, "/readme"):
+		f.readmeHits++
+		text, ok := f.readmes[strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/repos/"), "/readme")]
+		if !ok {
+			http.NotFound(w, r)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(map[string]string{"encoding": "base64", "content": base64.StdEncoding.EncodeToString([]byte(text))})
 	case r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/repos"):
 		owner := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/users/"), "/repos")
 		names := f.publicRepos
@@ -317,5 +328,60 @@ func TestRunPrintsVersion(t *testing.T) {
 	}
 	if strings.TrimSpace(out.String()) != version {
 		t.Errorf("version output = %q", out.String())
+	}
+}
+
+func TestRunDrawsAwesomeBadgeOnlyForLinkedRepositories(t *testing.T) {
+	config := `
+sections:
+  - groups:
+      - title: Tools
+        repos:
+          - name: listed
+            awesome: avelino/awesome-go
+          - name: dropped
+            awesome: Avelino/Awesome-Go
+          - name: plain
+`
+	fake := &fakeGitHub{
+		stars: map[string]int{"me/listed": 1, "me/dropped": 1, "me/plain": 1},
+		readmes: map[string]string{"avelino/awesome-go": "- [listed](https://github.com/me/listed) - A tool.\n" +
+			"- [dropped-extra](https://github.com/me/dropped-extra) - Not the same repository.\n"},
+	}
+	dir := setupRun(t, config, fake)
+	var out, errOut bytes.Buffer
+	err := run([]string{"-config", filepath.Join(dir, "showcase.yml"), "-readme", filepath.Join(dir, "README.md")}, &out, &errOut)
+	if err != nil {
+		t.Fatalf("run: %v\n%s", err, errOut.String())
+	}
+	if fake.readmeHits != 1 {
+		t.Errorf("awesome README requests = %d, want 1 (case-insensitive names share one fetch)", fake.readmeHits)
+	}
+	card := func(name string) string {
+		data, err := os.ReadFile(filepath.Join(dir, "cards", "light", "me__"+name+".svg"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(data)
+	}
+	if svg := card("listed"); !strings.Contains(svg, ">awesome</text>") || !strings.Contains(svg, "listed in avelino/awesome-go") {
+		t.Errorf("listed card has no awesome badge:\n%s", svg)
+	}
+	for _, name := range []string{"dropped", "plain"} {
+		if strings.Contains(card(name), ">awesome</text>") {
+			t.Errorf("%s card has an awesome badge", name)
+		}
+	}
+	if !strings.Contains(errOut.String(), "me/dropped is not linked from Avelino/Awesome-Go") {
+		t.Errorf("no warning for the unlinked repository: %q", errOut.String())
+	}
+}
+
+func TestRunFailsWhenAwesomeListCannotBeRead(t *testing.T) {
+	config := "sections:\n  - groups:\n      - title: T\n        repos:\n          - name: tool\n            awesome: nobody/missing\n"
+	dir := setupRun(t, config, &fakeGitHub{stars: map[string]int{"me/tool": 1}})
+	out, err := runIn(dir)
+	if err == nil || !strings.Contains(err.Error(), "awesome list nobody/missing") {
+		t.Fatalf("err = %v, want an awesome list error\n%s", err, out)
 	}
 }

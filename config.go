@@ -50,6 +50,10 @@ type RepoSpec struct {
 	Description string    `yaml:"description"`
 	Language    *Language `yaml:"language"`
 	Featured    bool      `yaml:"featured"`
+	// Awesome names an awesome list (owner/repo) that links to this
+	// repository. The card shows an "awesome" badge only while the list's
+	// README still links here.
+	Awesome string `yaml:"awesome"`
 }
 
 // Language is the label and dot color shown in a card's footer.
@@ -135,6 +139,12 @@ func (c *Config) validate() error {
 				}
 				if l := r.Language; l != nil && (l.Name == "" || !isHexColor(l.Color)) {
 					return fmt.Errorf("%s: language needs a name and a #rrggbb color", r.Name)
+				}
+				if r.Awesome != "" {
+					lo, ln, ok := strings.Cut(r.Awesome, "/")
+					if !ok || strings.TrimSpace(lo) == "" || strings.TrimSpace(ln) == "" || strings.Contains(ln, "/") {
+						return fmt.Errorf("%s: awesome must be an owner/repo such as avelino/awesome-go, got %q", r.Name, r.Awesome)
+					}
 				}
 				key := strings.ToLower(owner + "/" + name)
 				if seen[key] {

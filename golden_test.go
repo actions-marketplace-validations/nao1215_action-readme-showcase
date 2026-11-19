@@ -42,7 +42,8 @@ func checkGolden(t *testing.T, name, got string) {
 
 // goldenCards are the shapes a card takes: a featured card with every field,
 // a plain one with a long description that wraps and is cut, a card with
-// counts in the thousands and no language color, and a bare one.
+// counts in the thousands and no language color, a bare one, and one with
+// both badges and a title long enough to be cut before them.
 var goldenCards = map[string]CardData{
 	"featured": {Name: "gup", FullName: "nao1215/gup", Description: "Update binaries installed with `go install` in parallel.",
 		Language: "Go", LanguageColor: "#00ADD8", Stars: 622, Forks: 31, Release: "v1.10.5", Featured: true},
@@ -52,6 +53,9 @@ var goldenCards = map[string]CardData{
 	"thousands": {Name: "a-repository-with-a-name-far-too-long-for-the-card-title", FullName: "other/a-repository-with-a-name-far-too-long-for-the-card-title",
 		Description: "日本語の説明と emoji 🚀 が混ざる説明文", Language: "C++", Stars: 12345, Forks: 1234, Release: "v10.0.0-rc.1"},
 	"bare": {Name: "bare", FullName: "o/bare"},
+	"awesome": {Name: "a-long-enough-name-to-meet-both-badges", FullName: "nao1215/a-long-enough-name-to-meet-both-badges",
+		Description: "Listed in an awesome list and featured.", Language: "Go", LanguageColor: "#00ADD8", Stars: 128, Forks: 4,
+		Release: "v1.0.0", Featured: true, Awesome: "avelino/awesome-go"},
 }
 
 func TestGolden_Cards(t *testing.T) {

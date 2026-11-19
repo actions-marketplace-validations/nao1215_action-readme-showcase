@@ -125,18 +125,18 @@ func TestNewCardDataPrefersConfigDescription(t *testing.T) {
 	t.Parallel()
 
 	info := RepoInfo{Owner: "nao1215", Name: "gup", Description: "from github"}
-	if got := newCardData(RepoSpec{Name: "gup", Description: "Run `go install`"}, info, "nao1215").Description; got != "Run go install" {
+	if got := newCardData(RepoSpec{Name: "gup", Description: "Run `go install`"}, info, "nao1215", "").Description; got != "Run go install" {
 		t.Errorf("description = %q", got)
 	}
-	if got := newCardData(RepoSpec{Name: "gup"}, info, "nao1215").Description; got != "from github" {
+	if got := newCardData(RepoSpec{Name: "gup"}, info, "nao1215", "").Description; got != "from github" {
 		t.Errorf("fallback description = %q", got)
 	}
-	gozen := newCardData(RepoSpec{Name: "gup", Language: &Language{Name: "gozen", Color: "#ff5c8a"}}, RepoInfo{Owner: "nao1215", Name: "gup", Language: "Python", LanguageColor: "#3572A5"}, "nao1215")
+	gozen := newCardData(RepoSpec{Name: "gup", Language: &Language{Name: "gozen", Color: "#ff5c8a"}}, RepoInfo{Owner: "nao1215", Name: "gup", Language: "Python", LanguageColor: "#3572A5"}, "nao1215", "")
 	if gozen.Language != "gozen" || gozen.LanguageColor != "#ff5c8a" {
 		t.Errorf("language override ignored: %q %q", gozen.Language, gozen.LanguageColor)
 	}
 	other := RepoInfo{Owner: "someone", Name: "tool"}
-	if got := newCardData(RepoSpec{Name: "someone/tool"}, other, "nao1215").Name; got != "someone/tool" {
+	if got := newCardData(RepoSpec{Name: "someone/tool"}, other, "nao1215", "").Name; got != "someone/tool" {
 		t.Errorf("name of another owner's repository = %q", got)
 	}
 }
@@ -404,5 +404,62 @@ func TestReadmeImagesExist(t *testing.T) {
 		if _, err := os.Stat(filepath.FromSlash(m[1])); err != nil {
 			t.Errorf("README shows %s: %v", m[1], err)
 		}
+	}
+}
+
+func TestListedIn(t *testing.T) {
+	t.Parallel()
+
+	readme := "- [gup](https://github.com/nao1215/gup) - Update.\n" +
+		"- [sqly](https://GitHub.com/Nao1215/SQLY/) - SQL.\n" +
+		"- [markdown](https://github.com/nao1215/markdown.git)\n" +
+		"- [gozen-extra](https://github.com/nao1215/gozen-extra)\n" +
+		"- [a.b](https://github.com/nao1215/a.b#readme)\n" +
+		"https://github.com/nao1215/tail"
+	for _, tc := range []struct {
+		name string
+		want bool
+	}{
+		{"gup", true}, {"sqly", true}, {"markdown", true}, {"a.b", true}, {"tail", true},
+		{"gozen", false}, {"gu", false}, {"a", false}, {"filesql", false},
+	} {
+		if got := listedIn(readme, "nao1215", tc.name); got != tc.want {
+			t.Errorf("listedIn(%q) = %t, want %t", tc.name, got, tc.want)
+		}
+	}
+	if listedIn(readme, "someone", "gup") {
+		t.Error("matched a repository of another owner")
+	}
+}
+
+func TestParseConfigRejectsInvalidAwesome(t *testing.T) {
+	t.Parallel()
+
+	for _, awesome := range []string{"awesome-go", "/awesome-go", "avelino/", "a/b/c", " /x"} {
+		data := "owner: me\nsections:\n  - groups:\n      - title: T\n        repos:\n          - name: tool\n            awesome: \"" + awesome + "\"\n"
+		if _, err := parseConfig([]byte(data), ""); err == nil {
+			t.Errorf("accepted awesome %q", awesome)
+		}
+	}
+}
+
+func TestRenderCardBadges(t *testing.T) {
+	t.Parallel()
+
+	both := renderCard(CardData{Name: "gup", FullName: "nao1215/gup", Featured: true, Awesome: "avelino/awesome-go"}, themes[0])
+	f, a := strings.Index(both, ">featured</text>"), strings.Index(both, ">awesome</text>")
+	if f < 0 || a < 0 {
+		t.Fatalf("card lacks a badge:\n%s", both)
+	}
+	// featured keeps the right edge; awesome sits to its left.
+	if !strings.Contains(both, `<rect x="318" y="16" width="62"`) || !strings.Contains(both, `<rect x="246" y="16" width="66"`) {
+		t.Errorf("badges are not laid out right to left:\n%s", both)
+	}
+	only := renderCard(CardData{Name: "gup", FullName: "nao1215/gup", Awesome: "avelino/awesome-go"}, themes[1])
+	if !strings.Contains(only, `<rect x="314" y="16" width="66" height="18" rx="9" fill="none" stroke="`+themes[1].Awesome) {
+		t.Errorf("awesome badge alone is not at the right edge:\n%s", only)
+	}
+	if strings.Contains(only, themes[1].Featured) {
+		t.Error("a card that is not featured uses the featured color")
 	}
 }

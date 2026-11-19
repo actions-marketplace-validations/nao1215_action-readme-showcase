@@ -116,6 +116,22 @@ The SVG files go to `cards/` next to the README: `cards/light/`, `cards/dark/`, 
 
 The action deletes a card when its repository leaves the config. It only touches files named like its cards (`owner__repo.svg`) and its two graph files, so other images in the same directory are safe.
 
+## Awesome badge
+
+Name the awesome list a repository appears in, and its card gets an "awesome" badge next to the title:
+
+```yaml
+sections:
+  - groups:
+      - title: Go CLI tools
+        repos:
+          - name: gup
+            featured: true
+            awesome: avelino/awesome-go
+```
+
+The action does not take the claim on trust. On each run it reads the list's README through the GitHub API and draws the badge only when the README links to `github.com/owner/repo` (case does not matter, and `gup` does not match `gup-extra`). If the link is gone, the card loses the badge and the run prints a warning. If the list cannot be read at all, the run fails instead of dropping badges. Each list is read once, however many cards name it, and the default `${{ github.token }}` can read public lists.
+
 ## Star history
 
 List the repositories in `starHistory.repos` to draw their star history, independently of card highlighting. Names use `owner` by default; `owner/repo` also works. Repositories do not need a card. The graph follows the list order and shows up to six repositories.
@@ -200,6 +216,7 @@ Each run makes one GraphQL request for card and selected-repository metadata and
 | `repos[].name` | required | `repo` or `owner/repo`. |
 | `repos[].description` | GitHub description | Text on the card. Backticks are dropped. |
 | `repos[].featured` | `false` | Gold border and a "featured" badge. |
+| `repos[].awesome` | none | An awesome list as `owner/repo`, such as `avelino/awesome-go`. The card shows an "awesome" badge while that list's README links to the repository. |
 | `repos[].language` | GitHub primary language | `{name: gozen, color: "#ff5c8a"}` to override the label and dot color. |
 
 Cards come two to a row in the order you list them. A misspelled key is an error rather than being ignored. JSON works too, since it is valid YAML.
