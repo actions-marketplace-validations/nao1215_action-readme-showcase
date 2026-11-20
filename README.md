@@ -16,35 +16,16 @@
 
 A GitHub Action that draws a card for each repository you list, plus an optional star history graph, and puts them in your README.
 
-It needs nothing but GitHub and GitHub Actions. The action reads the GitHub API, writes the cards as SVG files, and your workflow commits them to your own repository. There is no image service to sign up for, and no third-party server the README depends on to show the images. Each card has a light and a dark version, so it follows the reader's GitHub theme.
+The action reads the GitHub API, writes the cards as SVG files, and your workflow commits them to your own repository, so the README does not depend on an outside image service. Each card has a light and a dark version that follows the reader's GitHub theme.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="doc/img/dark/nao1215__gup.svg"><img src="doc/img/light/nao1215__gup.svg" width="400" alt="nao1215/gup"></picture>
 <picture><source media="(prefers-color-scheme: dark)" srcset="doc/img/dark/nao1215__sqly.svg"><img src="doc/img/light/nao1215__sqly.svg" width="400" alt="nao1215/sqly"></picture>
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="doc/img/star-history-dark.svg?view=all-public-total"><img src="doc/img/star-history-light.svg?view=all-public-total" width="808" alt="Star history"></picture>
 
-```mermaid
-sequenceDiagram
-    box Your repository
-        participant C as readme-showcase.yml
-        participant R as README and cards/
-    end
-    box GitHub
-        participant W as GitHub Actions
-        participant A as action-readme-showcase
-        participant G as GitHub API
-    end
-
-    W->>A: Run with configuration
-    A->>G: Fetch repository metadata
-    G-->>A: Description, language, and star count
-    A->>R: Update SVG cards and README
-    W->>R: Commit and push if changed
-```
-
 ## Usage
 
-Put two markers in your README. Everything between them is replaced on each run; the rest of the file is left alone.
+Put two markers in your README. Each run replaces what is between them and leaves the rest of the file alone.
 
 ```markdown
 <!-- showcase:start -->
@@ -114,7 +95,7 @@ The SVG files go to `cards/` next to the README: `cards/light/`, `cards/dark/`, 
           git add README.md .github/showcase
 ```
 
-The action deletes a card when its repository leaves the config. It only touches files named like its cards (`owner__repo.svg`) and its two graph files, so other images in the same directory are safe.
+When a repository leaves the config, its card is deleted. The action only touches files named like its cards (`owner__repo.svg`) and its two graph files, so other images in the same directory are safe.
 
 ## Awesome badge
 
@@ -130,11 +111,11 @@ sections:
             awesome: avelino/awesome-go
 ```
 
-The action does not take the claim on trust. On each run it reads the list's README through the GitHub API and draws the badge only when the README links to `github.com/owner/repo` (case does not matter, and `gup` does not match `gup-extra`). If the link is gone, the card loses the badge and the run prints a warning. If the list cannot be read at all, the run fails instead of dropping badges. Each list is read once, however many cards name it, and the default `${{ github.token }}` can read public lists.
+On each run the action reads the list's README through the GitHub API and draws the badge only if it links to `github.com/owner/repo` (case-insensitive; `gup` does not match `gup-extra`). If the link is gone, the card loses the badge and the run prints a warning. If the list cannot be read, the run fails rather than dropping badges. Each list is read once however many cards name it, and the default `${{ github.token }}` can read public lists.
 
 ## Star history
 
-List the repositories in `starHistory.repos` to draw their star history, independently of card highlighting. Names use `owner` by default; `owner/repo` also works. Repositories do not need a card. The graph follows the list order and shows up to six repositories.
+List the repositories to graph in `starHistory.repos`, as `repo` (under `owner`) or `owner/repo`. They do not need a card, and `featured` has no effect on the graph. Lines follow the list order, up to six repositories.
 
 ```yaml
 owner: nao1215
@@ -145,34 +126,32 @@ sections:
   ...
 ```
 
-Set `starHistory.total: true` to add **`total (all public)`**, the combined star history of **all public repositories currently owned by `owner`**. The graph names that owner and states the scope. `total` is disabled by default.
+`starHistory.total: true` (off by default) adds a `total (all public)` line: the combined star history of every public repository `owner` owns now, whether or not it is in `repos` or has a card. The graph names the owner and states this scope.
 
 | Setting | Scope |
 | --- | --- |
 | `starHistory.repos` | Individual lines, in the listed order. `owner/repo` can select another owner's repository. |
 | `starHistory.total: true` | All public repositories owned by `owner`, including repositories absent from `repos` and the cards. Includes forks and archived repositories; excludes private repositories and other owners' repositories. |
 
-With `total` enabled, the graph displays the total and up to five individual lines. The display limit never restricts the total. For example, `repos: [gup, sqly]` with `owner: nao1215` shows those two individual lines plus the total for **all** of nao1215's public repositories, not just those two. The owner defaults to the account owning the workflow repository; it is not inferred from the token or the owners in `repos`.
+With `total` on, the graph shows the total and up to five individual lines; the limit does not apply to what the total counts. For example, `repos: [gup, sqly]` with `owner: nao1215` shows those two lines plus the total for all of nao1215's public repositories. `owner` defaults to the account that owns the workflow repository and is never inferred from the token or from `repos`.
 
-The total sums daily histories from GitHub for the current public repository inventory. Deleted, transferred-away, and now-private repositories are not included in past dates either. If any repository listing or history request fails, generation fails instead of publishing a partial total.
+The total adds up GitHub's daily histories of the repositories that are public today, so deleted, transferred and now-private repositories are missing from past dates too. If any listing or history request fails, the run fails instead of publishing a partial total.
 
-The `minStars` option has been removed. Remove it from existing configurations; every explicitly listed repository is now included.
+The graph uses GitHub's [aggregate star history API](https://docs.github.com/en/rest/activity/starring#get-repository-star-history), which returns daily counts with Metadata read access and does not read individual stargazers.
 
-When upgrading from v0.1.0, add `starHistory.repos` explicitly. The graph no longer selects repositories through `featured`.
-
-The graph uses GitHub's [aggregate star history API](https://docs.github.com/en/rest/activity/starring#get-repository-star-history), which provides daily counts with Metadata read access. It does not read individual stargazers.
+Upgrading from v0.1.0: add `starHistory.repos`, since the graph no longer picks repositories through `featured`, and delete `minStars`, which has been removed (every listed repository is included).
 
 ### Token setup
 
-For public repositories, the default `${{ github.token }}` works with the aggregate history API. Use the workflow in Usage; no extra secret is required. Do not add `with.token` with a missing secret, because an empty input overrides the default token.
+For public repositories the default `${{ github.token }}` is enough, and the workflow in Usage needs no extra secret. Do not pass `with.token` from a secret that does not exist: the empty input overrides the default token.
 
-If you want to use a fine-grained personal access token, follow these steps. This example graphs `gup`, `sqly`, `filesql`, and `markdown` owned by `nao1215`.
+To use a fine-grained personal access token instead, follow these steps. The example graphs `gup`, `sqly`, `filesql`, and `markdown` owned by `nao1215`.
 
 1. Open [Settings > Developer settings > Fine-grained tokens](https://github.com/settings/personal-access-tokens/new).
-2. Give the token a name and choose an expiration date. Set Resource owner to `nao1215` (use your account for your own repositories).
-3. Under Repository access, choose Only select repositories and select all four graph repositories. Selecting only the profile repository, `nao1215/nao1215`, is insufficient.
-4. Under Repository permissions, keep Metadata: Read-only, which GitHub normally adds automatically. No Contents write permission or User permissions are needed for this graph.
-5. Generate the token and copy its value. In the repository running the workflow (`nao1215/nao1215` in this example), open Settings > Secrets and variables > Actions > New repository secret. Use `STARS_TOKEN` as the name and paste the token as its value. Alternatively, run this command and paste the token at the prompt:
+2. Name the token, pick an expiration date, and set Resource owner to `nao1215` (your own account for your repositories).
+3. Under Repository access, choose Only select repositories and select all four graphed repositories. The profile repository `nao1215/nao1215` alone is not enough.
+4. Under Repository permissions, keep Metadata: Read-only, which GitHub usually adds itself. The graph needs no Contents write or User permissions.
+5. Generate and copy the token. In the repository that runs the workflow (`nao1215/nao1215` here), open Settings > Secrets and variables > Actions > New repository secret and save it as `STARS_TOKEN`, or run this and paste the token at the prompt:
 
    ```shell
    gh secret set STARS_TOKEN --repo nao1215/nao1215
@@ -187,11 +166,11 @@ If you want to use a fine-grained personal access token, follow these steps. Thi
        token: ${{ secrets.STARS_TOKEN }}
    ```
 
-When using a PAT, `starHistory.repos` selects individual lines. With `total: true`, the action also reads histories for all of `owner`'s public repositories, so access limited to the listed graph repositories may be insufficient. The default `${{ github.token }}` works for public data; no new write or user permission is required. If configuring a PAT, ensure Metadata read access covers the entire public inventory used by the total.
+With `total: true` the action also reads the histories of all of `owner`'s public repositories, so a PAT limited to the graphed repositories is not enough: its Metadata read access must cover every public repository in the total.
 
-The PAT only reads data. Committing the generated files uses the workflow's `permissions: contents: write` and the credentials from `actions/checkout`; it does not need write access on the PAT.
+The PAT only reads. The commit step uses the workflow's `permissions: contents: write` and the credentials from `actions/checkout`.
 
-After replacing an expired or regenerated token, update the `STARS_TOKEN` secret in the workflow repository and rerun the failed job. Editing permissions on an existing PAT keeps the same token value.
+After replacing an expired or regenerated token, update the `STARS_TOKEN` secret and rerun the failed job. Editing the permissions of an existing PAT keeps the same token value.
 
 ### If token setup fails
 
@@ -202,7 +181,7 @@ After replacing an expired or regenerated token, update the `STARS_TOKEN` secret
 | HTTP 403 from `/stargazers/history` | Check the PAT's resource owner, selected graph repositories, Metadata read permission, and any organization approval requirement. |
 | HTTP 403 from `/stargazers` on v0.1.0 | Upgrade to v0.2.0 or later. v0.1.0 uses the restricted individual-stargazer API; adding write permissions is unnecessary with the aggregate API. |
 
-Each run makes one GraphQL request for card and selected-repository metadata and paginated REST history requests, with up to 30 weeks per page. With `total: true`, it additionally lists all public repositories (100 per page) and fetches their histories. Histories shared with individual lines are fetched only once. Accounts with many repositories require more API requests and runtime.
+Each run makes one GraphQL request for card and graph metadata, plus paginated REST history requests of up to 30 weeks per page. With `total: true` it also lists all public repositories (100 per page) and fetches their histories, reusing those already fetched for individual lines, so accounts with many repositories take more requests and time.
 
 ## Config
 
@@ -219,7 +198,7 @@ Each run makes one GraphQL request for card and selected-repository metadata and
 | `repos[].awesome` | none | An awesome list as `owner/repo`, such as `avelino/awesome-go`. The card shows an "awesome" badge while that list's README links to the repository. |
 | `repos[].language` | GitHub primary language | `{name: gozen, color: "#ff5c8a"}` to override the label and dot color. |
 
-Cards come two to a row in the order you list them. A misspelled key is an error rather than being ignored. JSON works too, since it is valid YAML.
+Cards come two to a row in the order you list them. A misspelled key is an error. JSON works too, since it is valid YAML.
 
 ## Inputs
 
@@ -240,7 +219,7 @@ Cards come two to a row in the order you list them. A misspelled key is an error
 
 ## How it runs
 
-The action downloads the prebuilt `readme-showcase` binary for the runner (Linux, macOS, or Windows on amd64 or arm64) from this repository's release, checks it against `checksums.txt`, and runs it. `@v0` resolves to the newest `v0.x.y` release. Referencing a branch or a commit SHA builds the binary from source with the Go in GitHub's runner images (on PATH, or in the tool cache on macOS).
+The action downloads the prebuilt `readme-showcase` binary for the runner (Linux, macOS, or Windows on amd64 or arm64) from this repository's release, checks it against `checksums.txt`, and runs it. `@v0` resolves to the newest `v0.x.y` release. A branch or commit SHA reference builds the binary from source with the Go in GitHub's runner images (on PATH, or in the tool cache on macOS).
 
 The binary also runs outside Actions:
 
@@ -249,7 +228,7 @@ go install github.com/nao1215/action-readme-showcase@latest
 GITHUB_TOKEN=$(gh auth token) action-readme-showcase -config .github/readme-showcase.yml
 ```
 
-On GitHub Enterprise Server, `GITHUB_API_URL` and `GITHUB_GRAPHQL_URL`, which Actions sets, point it at the server's API.
+On GitHub Enterprise Server, the `GITHUB_API_URL` and `GITHUB_GRAPHQL_URL` variables that Actions sets point it at the server's API.
 
 ## Development
 
