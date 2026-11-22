@@ -6,6 +6,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `starHistory.position: bottom` places the star history graph below the cards instead of above them.
+
 ## [0.4.0] - 2026-11-19
 
 ### Added
