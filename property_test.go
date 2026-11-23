@@ -242,3 +242,27 @@ func TestMetamorphic_ReplacingBetweenMarkersTwiceIsReplacingOnce(t *testing.T) {
 		}
 	})
 }
+
+func TestProperty_DownloadBarsFollowTheCountsAndFitTheSpan(t *testing.T) {
+	t.Parallel()
+	rapid.Check(t, func(t *rapid.T) {
+		most := rapid.IntRange(1, 10_000_000).Draw(t, "most")
+		a := rapid.IntRange(0, most).Draw(t, "a")
+		b := rapid.IntRange(0, most).Draw(t, "b")
+		span := rapid.Float64Range(10, 600).Draw(t, "span")
+
+		wa, wb := downloadBarWidth(a, most, span), downloadBarWidth(b, most, span)
+		if a <= b && wa > wb {
+			t.Fatalf("count %d got %.2fpx, more than count %d at %.2fpx", a, wa, b, wb)
+		}
+		if wa > span || wb > span {
+			t.Fatalf("a bar is wider than the %.2fpx span: %.2f, %.2f", span, wa, wb)
+		}
+		if (a > 0) != (wa > 0) {
+			t.Fatalf("count %d drew a %.2fpx bar; only a zero count may vanish", a, wa)
+		}
+		if downloadBarWidth(most, most, span) != span {
+			t.Fatal("the largest count does not fill the span")
+		}
+	})
+}

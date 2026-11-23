@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="808" height="344" viewBox="0 0 808 344" role="img" aria-label="Release downloads">
+<title>Release downloads: gup 69,930, atago 50,896, sqly 11,332, himorime 6,623, mimixbox 2,855, gozen 2,655, jose 2,055, sqluv 1,532, mkgoprj 1,313, serial 964</title>
+<style>text{font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif}</style>
+<rect x="0.75" y="0.75" width="806.5" height="342.5" rx="8" fill="#151b23" stroke="#3d444d"/>
+<path transform="translate(20 17) scale(1)" fill="#9198a1" d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14ZM7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.969a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1 1.06-1.06l1.97 1.969Z"/>
+<text x="42" y="30" font-size="15" font-weight="600" fill="#d1d7e0">Release downloads</text>
+<text x="20" y="52" font-size="11" fill="#9198a1"><title>GitHub release assets of public repositories owned by nao1215. go install and package managers are not counted.</title>GitHub release assets of public repositories owned by nao1215. go install and package managers are not counted.</text>
+<text x="20" y="87" font-size="12" fill="#d1d7e0">gup</text>
+<rect class="bar" x="188" y="76" width="528" height="14" rx="3" fill="#3987e5"/>
+<text x="722" y="87" font-size="12" fill="#9198a1">69,930</text>
+<text x="20" y="113" font-size="12" fill="#d1d7e0">atago</text>
+<rect class="bar" x="188" y="102" width="384.29" height="14" rx="3" fill="#3987e5"/>
+<text x="578.29" y="113" font-size="12" fill="#9198a1">50,896</text>
+<text x="20" y="139" font-size="12" fill="#d1d7e0">sqly</text>
+<rect class="bar" x="188" y="128" width="85.56" height="14" rx="3" fill="#3987e5"/>
+<text x="279.56" y="139" font-size="12" fill="#9198a1">11,332</text>
+<text x="20" y="165" font-size="12" fill="#d1d7e0">himorime</text>
+<rect class="bar" x="188" y="154" width="50.01" height="14" rx="3" fill="#3987e5"/>
+<text x="244.01" y="165" font-size="12" fill="#9198a1">6,623</text>
+<text x="20" y="191" font-size="12" fill="#d1d7e0">mimixbox</text>
+<rect class="bar" x="188" y="180" width="21.56" height="14" rx="3" fill="#3987e5"/>
+<text x="215.56" y="191" font-size="12" fill="#9198a1">2,855</text>
+<text x="20" y="217" font-size="12" fill="#d1d7e0">gozen</text>
+<rect class="bar" x="188" y="206" width="20.05" height="14" rx="3" fill="#3987e5"/>
+<text x="214.05" y="217" font-size="12" fill="#9198a1">2,655</text>
+<text x="20" y="243" font-size="12" fill="#d1d7e0">jose</text>
+<rect class="bar" x="188" y="232" width="15.52" height="14" rx="3" fill="#3987e5"/>
+<text x="209.52" y="243" font-size="12" fill="#9198a1">2,055</text>
+<text x="20" y="269" font-size="12" fill="#d1d7e0">sqluv</text>
+<rect class="bar" x="188" y="258" width="11.57" height="14" rx="3" fill="#3987e5"/>
+<text x="205.57" y="269" font-size="12" fill="#9198a1">1,532</text>
+<text x="20" y="295" font-size="12" fill="#d1d7e0">mkgoprj</text>
+<rect class="bar" x="188" y="284" width="9.91" height="14" rx="3" fill="#3987e5"/>
+<text x="203.91" y="295" font-size="12" fill="#9198a1">1,313</text>
+<text x="20" y="321" font-size="12" fill="#d1d7e0">serial</text>
+<rect class="bar" x="188" y="310" width="7.28" height="14" rx="3" fill="#3987e5"/>
+<text x="201.28" y="321" font-size="12" fill="#9198a1">964</text>
+</svg>

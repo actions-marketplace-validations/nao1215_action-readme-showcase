@@ -38,9 +38,32 @@ func renderShowcase(cfg *Config, infos map[string]RepoInfo, cardsDir string, sta
 		graph = fmt.Sprintf(`<picture><source media="(prefers-color-scheme: dark)" srcset="%s"><img src="%s" width="808" alt="%s"></picture>`+"\n\n",
 			path.Join(cardsDir, starGraphFile("dark"))+imageVersion, path.Join(cardsDir, starGraphFile("light"))+imageVersion, html.EscapeString(alt))
 	}
-	bottom := cfg.StarHistory != nil && cfg.StarHistory.Position == "bottom"
-	if !bottom {
-		b.WriteString(graph)
+	downloads := ""
+	if cfg.Downloads != nil {
+		alt := fmt.Sprintf("Release downloads of public repositories owned by %s", cfg.Owner)
+		downloads = fmt.Sprintf(`<picture><source media="(prefers-color-scheme: dark)" srcset="%s"><img src="%s" width="808" alt="%s"></picture>`+"\n\n",
+			path.Join(cardsDir, downloadsFile("dark")), path.Join(cardsDir, downloadsFile("light")), html.EscapeString(alt))
+	}
+	// Graphs keep this order on either side of the cards: star history,
+	// then downloads.
+	var above, below []string
+	place := func(img, position string) {
+		switch {
+		case img == "":
+		case position == "bottom":
+			below = append(below, img)
+		default:
+			above = append(above, img)
+		}
+	}
+	if cfg.StarHistory != nil {
+		place(graph, cfg.StarHistory.Position)
+	}
+	if cfg.Downloads != nil {
+		place(downloads, cfg.Downloads.Position)
+	}
+	for _, img := range above {
+		b.WriteString(img)
 	}
 	for i, s := range cfg.Sections {
 		if i > 0 {
@@ -65,11 +88,11 @@ func renderShowcase(cfg *Config, infos map[string]RepoInfo, cardsDir string, sta
 			b.WriteString("</details>\n\n")
 		}
 	}
-	if bottom && graph != "" {
-		if len(cfg.Sections) > 0 {
-			b.WriteString("---\n\n")
-		}
-		b.WriteString(graph)
+	if len(below) > 0 && len(cfg.Sections) > 0 {
+		b.WriteString("---\n\n")
+	}
+	for _, img := range below {
+		b.WriteString(img)
 	}
 	return b.String()
 }

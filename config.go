@@ -18,7 +18,32 @@ type Config struct {
 	// StarHistory turns on the star history graph. It is nil when the config
 	// has no starHistory key.
 	StarHistory *StarHistory `yaml:"starHistory"`
-	Sections    []Section    `yaml:"sections"`
+	// Downloads turns on the release downloads ranking. It is nil when the
+	// config has no downloads key.
+	Downloads *Downloads `yaml:"downloads"`
+	Sections  []Section  `yaml:"sections"`
+}
+
+// Downloads ranks the owner's public repositories by release downloads.
+type Downloads struct {
+	// Top is how many repositories get a bar; zero means defaultDownloadsTop.
+	Top int `yaml:"top"`
+	// Position places the graph above ("top", the default) or below
+	// ("bottom") the cards, like StarHistory.Position.
+	Position string `yaml:"position"`
+}
+
+const (
+	defaultDownloadsTop = 10
+	maxDownloadsTop     = 20
+)
+
+// limit is the number of bars to draw.
+func (d *Downloads) limit() int {
+	if d.Top == 0 {
+		return defaultDownloadsTop
+	}
+	return d.Top
 }
 
 // StarHistory selects graph repositories independently of the cards.
@@ -129,6 +154,16 @@ func (c *Config) validate() error {
 				return fmt.Errorf("starHistory repository %q is listed twice", name)
 			}
 			seen[key] = true
+		}
+	}
+	if d := c.Downloads; d != nil {
+		switch d.Position {
+		case "", "top", "bottom":
+		default:
+			return fmt.Errorf("downloads.position is %q; use top or bottom", d.Position)
+		}
+		if d.Top < 0 || d.Top > maxDownloadsTop {
+			return fmt.Errorf("downloads.top is %d; use 1 to %d", d.Top, maxDownloadsTop)
 		}
 	}
 	if len(c.Repos()) == 0 {

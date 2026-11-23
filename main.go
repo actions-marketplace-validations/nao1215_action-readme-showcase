@@ -132,6 +132,27 @@ func run(args []string, stdout, stderr io.Writer) error {
 		}
 	}
 
+	if cfg.Downloads != nil {
+		rows, err := fetchDownloads(ctx, client, token, cfg.Owner)
+		if err != nil {
+			return err
+		}
+		if len(rows) > cfg.Downloads.limit() {
+			rows = rows[:cfg.Downloads.limit()]
+		}
+		for _, t := range themes {
+			if err := w.write(filepath.Join(outDir, downloadsFile(t.Name)), []byte(renderDownloadGraph(rows, cfg.Owner, t))); err != nil {
+				return err
+			}
+		}
+	} else {
+		for _, t := range themes {
+			if err := w.remove(filepath.Join(outDir, downloadsFile(t.Name))); err != nil {
+				return err
+			}
+		}
+	}
+
 	doc, err := os.ReadFile(*readmePath)
 	if err != nil {
 		return err
