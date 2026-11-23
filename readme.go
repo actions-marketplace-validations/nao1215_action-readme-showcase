@@ -27,6 +27,7 @@ func starGraphFile(theme string) string {
 // cardsDir is the card directory relative to the README.
 func renderShowcase(cfg *Config, infos map[string]RepoInfo, cardsDir string, starHistory bool) string {
 	var b strings.Builder
+	graph := ""
 	if starHistory {
 		alt := "Star history of selected repositories"
 		imageVersion := ""
@@ -34,8 +35,12 @@ func renderShowcase(cfg *Config, infos map[string]RepoInfo, cardsDir string, sta
 			alt += fmt.Sprintf(" and all public repositories owned by %s (total, including forks and archived repositories)", cfg.Owner)
 			imageVersion = "?view=all-public-total"
 		}
-		fmt.Fprintf(&b, `<picture><source media="(prefers-color-scheme: dark)" srcset="%s"><img src="%s" width="808" alt="%s"></picture>`+"\n\n",
+		graph = fmt.Sprintf(`<picture><source media="(prefers-color-scheme: dark)" srcset="%s"><img src="%s" width="808" alt="%s"></picture>`+"\n\n",
 			path.Join(cardsDir, starGraphFile("dark"))+imageVersion, path.Join(cardsDir, starGraphFile("light"))+imageVersion, html.EscapeString(alt))
+	}
+	bottom := cfg.StarHistory != nil && cfg.StarHistory.Position == "bottom"
+	if !bottom {
+		b.WriteString(graph)
 	}
 	for i, s := range cfg.Sections {
 		if i > 0 {
@@ -59,6 +64,12 @@ func renderShowcase(cfg *Config, infos map[string]RepoInfo, cardsDir string, sta
 		if s.Summary != "" {
 			b.WriteString("</details>\n\n")
 		}
+	}
+	if bottom && graph != "" {
+		if len(cfg.Sections) > 0 {
+			b.WriteString("---\n\n")
+		}
+		b.WriteString(graph)
 	}
 	return b.String()
 }

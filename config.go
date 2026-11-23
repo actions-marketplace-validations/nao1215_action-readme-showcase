@@ -27,6 +27,9 @@ type StarHistory struct {
 	Repos []string `yaml:"repos"`
 	// Total adds the combined history of all public repositories owned by Config.Owner.
 	Total bool `yaml:"total"`
+	// Position places the graph above ("top", the default) or below
+	// ("bottom") the cards.
+	Position string `yaml:"position"`
 }
 
 // Section is a run of groups. A section with a Summary is folded into a
@@ -106,6 +109,11 @@ func (c *Config) validate() error {
 		return errors.New("owner is empty; set owner in the config or run inside GitHub Actions")
 	}
 	if c.StarHistory != nil {
+		switch c.StarHistory.Position {
+		case "", "top", "bottom":
+		default:
+			return fmt.Errorf("starHistory.position is %q; use top or bottom", c.StarHistory.Position)
+		}
 		if len(c.StarHistory.Repos) == 0 {
 			return errors.New("starHistory.repos is empty; list graph repositories explicitly")
 		}

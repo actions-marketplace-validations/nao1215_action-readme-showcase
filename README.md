@@ -190,6 +190,7 @@ Each run makes one GraphQL request for card and graph metadata, plus paginated R
 | `owner` | owner of the repository running the workflow | Owner for names written without `owner/`. |
 | `starHistory.repos` | required with `starHistory` | Repository names in graph order, independent of cards and `featured`. |
 | `starHistory.total` | `false` | Add `total (all public)` for all public repositories owned by `owner`, including forks and archived repositories, independently of `starHistory.repos`. |
+| `starHistory.position` | `top` | `top` puts the graph above the cards; `bottom` puts it below them. |
 | `sections[].summary` | none | Folds the section into `<details>` with this summary. |
 | `sections[].groups[].title` | required | Heading above the cards. |
 | `repos[].name` | required | `repo` or `owner/repo`. |

@@ -196,6 +196,31 @@ func TestRenderShowcasePairsCards(t *testing.T) {
 	}
 }
 
+func TestRenderShowcaseStarHistoryPosition(t *testing.T) {
+	t.Parallel()
+
+	infos := map[string]RepoInfo{"a": {Owner: "o", Name: "a"}}
+	sections := []Section{{Summary: "Folded", Groups: []Group{{Title: "A", Repos: []RepoSpec{{Name: "a"}}}}}}
+	for _, tc := range []struct {
+		position string
+		bottom   bool
+	}{{"", false}, {"top", false}, {"bottom", true}} {
+		cfg := &Config{Owner: "o", StarHistory: &StarHistory{Repos: []string{"a"}, Position: tc.position}, Sections: sections}
+		out := renderShowcase(cfg, infos, "cards", true)
+		graph := strings.Index(out, "star-history-light.svg")
+		cards := strings.Index(out, "### A")
+		if graph < 0 || cards < 0 {
+			t.Fatalf("position %q: graph or cards missing:\n%s", tc.position, out)
+		}
+		if got := graph > cards; got != tc.bottom {
+			t.Errorf("position %q: graph below cards = %v, want %v:\n%s", tc.position, got, tc.bottom, out)
+		}
+		if tc.bottom && !strings.Contains(out, "</details>\n\n---\n\n<picture>") {
+			t.Errorf("position bottom: graph is not separated from the cards:\n%s", out)
+		}
+	}
+}
+
 func TestConfigValidate(t *testing.T) {
 	t.Parallel()
 
@@ -204,13 +229,14 @@ func TestConfigValidate(t *testing.T) {
 		t.Errorf("valid config rejected: %v", err)
 	}
 	for name, cfg := range map[string]Config{
-		"no owner":   {Sections: ok.Sections},
-		"no repos":   {Owner: "o"},
-		"duplicate":  {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: "a"}, {Name: "O/A"}}}}}}},
-		"bad name":   {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: "a/b/c"}}}}}}},
-		"no title":   {Owner: "o", Sections: []Section{{Groups: []Group{{Repos: []RepoSpec{{Name: "a"}}}}}}},
-		"bad color":  {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: "a", Language: &Language{Name: "gozen", Color: "pink"}}}}}}}},
-		"empty name": {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: ""}}}}}}},
+		"no owner":     {Sections: ok.Sections},
+		"no repos":     {Owner: "o"},
+		"duplicate":    {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: "a"}, {Name: "O/A"}}}}}}},
+		"bad name":     {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: "a/b/c"}}}}}}},
+		"no title":     {Owner: "o", Sections: []Section{{Groups: []Group{{Repos: []RepoSpec{{Name: "a"}}}}}}},
+		"bad color":    {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: "a", Language: &Language{Name: "gozen", Color: "pink"}}}}}}}},
+		"empty name":   {Owner: "o", Sections: []Section{{Groups: []Group{{Title: "T", Repos: []RepoSpec{{Name: ""}}}}}}},
+		"bad position": {Owner: "o", StarHistory: &StarHistory{Repos: []string{"a"}, Position: "left"}, Sections: ok.Sections},
 	} {
 		if err := cfg.validate(); err == nil {
 			t.Errorf("%s: expected an error", name)
