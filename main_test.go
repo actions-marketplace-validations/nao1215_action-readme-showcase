@@ -26,6 +26,7 @@ type fakeGitHub struct {
 	publicRepos  []string          // optional explicit public inventory
 	readmes      map[string]string // owner/name -> README text of an awesome list
 	readmeHits   int
+	downloads    map[string][]int // owner/name -> one release per entry, with one asset of that many downloads
 }
 
 var aliasRE = regexp.MustCompile(`(r\d+): repository\(owner: "([^"]+)", name: "([^"]+)"\)`)
@@ -82,6 +83,15 @@ func (f *fakeGitHub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{"data": data})
+	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/repos/") && strings.HasSuffix(r.URL.Path, "/releases"):
+		var page int
+		_, _ = fmt.Sscan(r.URL.Query().Get("page"), &page)
+		all := f.downloads[strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/repos/"), "/releases")]
+		out := []map[string]any{}
+		for i := (page - 1) * 100; i < len(all) && i < page*100; i++ {
+			out = append(out, map[string]any{"assets": []map[string]any{{"download_count": all[i]}}})
+		}
+		_ = json.NewEncoder(w).Encode(out)
 	case r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/stargazers/history"):
 		f.starRequests++
 		if f.refuseStars {

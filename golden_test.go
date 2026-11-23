@@ -97,3 +97,16 @@ func TestGolden_StarGraph(t *testing.T) {
 		})
 	}
 }
+
+func TestGolden_Downloads(t *testing.T) {
+	t.Parallel()
+	rows := []RepoDownloads{{Name: "gup", Count: 69920}, {Name: "atago", Count: 50832}, {Name: "sqly", Count: 11331},
+		{Name: "a-repository-name-too-long-for-the-label-column", Count: 952}, {Name: "tiny", Count: 1}}
+	for _, theme := range themes {
+		t.Run(theme.Name, func(t *testing.T) {
+			t.Parallel()
+			checkGolden(t, "downloads-"+theme.Name+".svg", renderDownloadGraph(rows, "nao1215", theme))
+			checkGolden(t, "downloads-empty-"+theme.Name+".svg", renderDownloadGraph(nil, "nao1215", theme))
+		})
+	}
+}

@@ -372,3 +372,76 @@ scenarios:
           exit_code: 0
           stdout:
             matches: '^\S+\n$'
+
+  - name: the downloads graph ranks the owner's public repositories by release downloads
+    mock_servers:
+      - name: api
+        routes:
+          - method: POST
+            path: /graphql
+            json:
+              data:
+                r0:
+                  name: tool
+                  owner: { login: me }
+                  description: A tool.
+                  stargazerCount: 3
+                  forkCount: 1
+                  isArchived: false
+                  primaryLanguage: { name: Go, color: "#00ADD8" }
+                  latestRelease: { tagName: v1.2.3 }
+          - method: GET
+            path: /users/me/repos
+            json:
+              - name: tool
+                owner: { login: me }
+                private: false
+              - name: unlisted
+                owner: { login: me }
+                private: false
+              - name: quiet
+                owner: { login: me }
+                private: false
+          - method: GET
+            path: /repos/me/tool/releases
+            json:
+              - assets: [{ download_count: 40 }]
+          # Two assets of one release add up, and the repository needs no card.
+          - method: GET
+            path: /repos/me/unlisted/releases
+            json:
+              - assets: [{ download_count: 7 }, { download_count: 3 }]
+          # No releases: left out of the graph.
+          - method: GET
+            path: /repos/me/quiet/releases
+            json: []
+    env: *env
+    steps:
+      - *readme
+      - fixture:
+          file: showcase.yml
+          content: |
+            owner: me
+            downloads:
+              position: bottom
+            sections:
+              - groups:
+                  - title: Mine
+                    repos:
+                      - name: tool
+      - run:
+          command: readme-showcase -config showcase.yml
+      - assert:
+          exit_code: 0
+      - assert:
+          file:
+            path: cards/downloads-light.svg
+            contains: "<title>Release downloads: tool 40, unlisted 10</title>"
+      - assert:
+          file:
+            path: cards/downloads-dark.svg
+            not_contains: ">quiet<"
+      - assert:
+          file:
+            path: README.md
+            contains: '<img src="cards/downloads-light.svg" width="808" alt="Release downloads of public repositories owned by me">'

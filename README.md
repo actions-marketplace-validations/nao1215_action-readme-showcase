@@ -15,7 +15,7 @@
 
 # action-readme-showcase
 
-A GitHub Action that draws repository cards and an optional star history graph as SVG files in your own repository, and lists them in your README. Each image has a light and a dark version that follows the reader's theme.
+A GitHub Action that draws repository cards, plus optional star history and release downloads graphs, as SVG files in your own repository, and lists them in your README. Each image has a light and a dark version that follows the reader's theme.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="doc/img/dark/nao1215__gup.svg"><img src="doc/img/light/nao1215__gup.svg" width="400" alt="nao1215/gup"></picture>
 <picture><source media="(prefers-color-scheme: dark)" srcset="doc/img/dark/nao1215__sqly.svg"><img src="doc/img/light/nao1215__sqly.svg" width="400" alt="nao1215/sqly"></picture>
@@ -93,7 +93,9 @@ cards/
 ├── light/owner__repo.svg
 ├── dark/owner__repo.svg
 ├── star-history-light.svg
-└── star-history-dark.svg
+├── star-history-dark.svg
+├── downloads-light.svg
+└── downloads-dark.svg
 ```
 
 To keep them elsewhere, set `cards-dir` to a directory relative to the README and add the same directory in the commit step:
@@ -245,6 +247,21 @@ With `total: true` the PAT must also cover every public repository in the total.
 
 A run makes one GraphQL request, plus REST pages of star history (30 weeks each). With `total: true` it also reads every public repository's history, so large accounts take longer.
 
+## Downloads
+
+```yaml
+owner: nao1215
+downloads:
+  top: 10          # bars to draw, 1 to 20
+  position: bottom # below the cards; the default is top
+```
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="doc/img/downloads-dark.svg"><img src="doc/img/downloads-light.svg" width="808" alt="Release downloads"></picture>
+
+The graph ranks repositories by the downloads of their GitHub release assets, summed over every release. It reads the same repositories as `starHistory.total`: every public repository `owner` owns today, forks and archived ones included. Repositories with no downloads are left out. Installs through `go install`, Homebrew and other package managers never touch a release asset, so they are not counted.
+
+Each repository costs one request per 100 releases, and the default token is enough. If any request fails, the run fails instead of publishing a partial ranking. When the star history is on the same side of the cards, it comes first.
+
 ## Config
 
 | Key | Default | Meaning |
@@ -253,6 +270,8 @@ A run makes one GraphQL request, plus REST pages of star history (30 weeks each)
 | `starHistory.repos` | required with `starHistory` | `repo` or `owner/repo` in graph order, independent of cards and `featured`. |
 | `starHistory.total` | `false` | Add a line for all public repositories of `owner`. |
 | `starHistory.position` | `top` | `top` puts the graph above the cards; `bottom` puts it below them. |
+| `downloads.top` | `10` | How many repositories get a bar, 1 to 20. |
+| `downloads.position` | `top` | `top` or `bottom`, as for `starHistory.position`. |
 | `sections[].summary` | none | Folds the section into `<details>` with this summary. |
 | `sections[].groups[].title` | required | Heading above the cards. |
 | `repos[].name` | required | `repo` or `owner/repo`. |

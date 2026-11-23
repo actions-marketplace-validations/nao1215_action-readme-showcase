@@ -6,6 +6,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `downloads` draws a bar chart that ranks the owner's public repositories by the downloads of their GitHub release assets, summed over every release, into `cards/downloads-light.svg` and `cards/downloads-dark.svg`. `downloads.top` sets how many bars to draw (default 10, at most 20) and `downloads.position: bottom` puts the graph below the cards. Repositories with no downloads are left out, a failed request fails the run, and the graph states that `go install` and package manager installs are not counted.
+
 ## [0.5.0] - 2026-11-22
 
 ### Added

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="808" height="214" viewBox="0 0 808 214" role="img" aria-label="Release downloads">
+<title>Release downloads: gup 69,920, atago 50,832, sqly 11,331, a-repository-name-too-long-for-the-label-column 952, tiny 1</title>
+<style>text{font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif}</style>
+<rect x="0.75" y="0.75" width="806.5" height="212.5" rx="8" fill="#151b23" stroke="#3d444d"/>
+<path transform="translate(20 17) scale(1)" fill="#9198a1" d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14ZM7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.969a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1 1.06-1.06l1.97 1.969Z"/>
+<text x="42" y="30" font-size="15" font-weight="600" fill="#d1d7e0">Release downloads</text>
+<text x="20" y="52" font-size="11" fill="#9198a1"><title>GitHub release assets of public repositories owned by nao1215. go install and package managers are not counted.</title>GitHub release assets of public repositories owned by nao1215. go install and package managers are not counted.</text>
+<text x="20" y="87" font-size="12" fill="#d1d7e0">gup</text>
+<rect class="bar" x="188" y="76" width="528" height="14" rx="3" fill="#3987e5"/>
+<text x="722" y="87" font-size="12" fill="#9198a1">69,920</text>
+<text x="20" y="113" font-size="12" fill="#d1d7e0">atago</text>
+<rect class="bar" x="188" y="102" width="383.86" height="14" rx="3" fill="#3987e5"/>
+<text x="577.86" y="113" font-size="12" fill="#9198a1">50,832</text>
+<text x="20" y="139" font-size="12" fill="#d1d7e0">sqly</text>
+<rect class="bar" x="188" y="128" width="85.57" height="14" rx="3" fill="#3987e5"/>
+<text x="279.57" y="139" font-size="12" fill="#9198a1">11,331</text>
+<text x="20" y="165" font-size="12" fill="#d1d7e0">a-repository-name-too-l…</text>
+<rect class="bar" x="188" y="154" width="7.19" height="14" rx="3" fill="#3987e5"/>
+<text x="201.19" y="165" font-size="12" fill="#9198a1">952</text>
+<text x="20" y="191" font-size="12" fill="#d1d7e0">tiny</text>
+<rect class="bar" x="188" y="180" width="2" height="14" rx="3" fill="#3987e5"/>
+<text x="196" y="191" font-size="12" fill="#9198a1">1</text>
+</svg>
